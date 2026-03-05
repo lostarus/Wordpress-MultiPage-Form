@@ -1,0 +1,352 @@
+/**
+ * Admin Settings Page Styles
+ * Pentest Quote Form - Settings Page
+ */
+
+/* Button Icon Alignment Fix */
+.ptf-settings-container .button,
+.ptf-settings-section .button,
+.webhook-templates .button,
+.webhooks-table .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.ptf-settings-container .button .dashicons,
+.ptf-settings-section .button .dashicons,
+.webhook-templates .button .dashicons,
+.webhooks-table .button .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 1;
+}
+
+/* Settings Container */
+.ptf-settings-container {
+    max-width: 900px;
+}
+
+/* Settings Section */
+.ptf-settings-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.ptf-settings-section h2 {
+    margin: 0 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ptf-settings-section h2 .dashicons {
+    color: #2F7CFF;
+}
+
+/* Form Table */
+.ptf-settings-section .form-table {
+    margin: 0;
+}
+
+.ptf-settings-section .form-table th {
+    width: 200px;
+    padding: 15px 10px 15px 0;
+}
+
+.ptf-settings-section .form-table td {
+    padding: 15px 0;
+}
+
+/* Color Picker Preview */
+.ptf-color-preview {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 4px;
+    margin-top: 15px;
+}
+
+.ptf-color-preview h4 {
+    margin: 0 0 15px 0;
+}
+
+.ptf-color-preview .preview-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.ptf-color-preview .preview-btn-primary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.ptf-color-preview .preview-success {
+    color: #B7FF10;
+    font-weight: 600;
+    text-shadow: 0 0 10px currentColor;
+}
+
+/* Data Storage Warning */
+.ptf-data-storage-warning {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+/* Webhooks Section */
+.webhook-templates {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.webhook-templates .button {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.webhooks-list-container {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.webhooks-list-container h4 {
+    margin: 0 0 10px 0;
+}
+
+.webhooks-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.webhooks-table th,
+.webhooks-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.webhooks-table th {
+    background: #f1f1f1;
+    font-weight: 600;
+}
+
+.webhook-status-active {
+    color: #28a745;
+}
+
+.webhook-status-inactive {
+    color: #999;
+}
+
+/* JSON Editor */
+.webhook-json-editor {
+    margin-top: 20px;
+}
+
+.webhook-json-editor h4 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#json-editor-container {
+    margin-top: 10px;
+}
+
+#webhooks_json {
+    font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#json-validation-result {
+    margin-left: 10px;
+    font-weight: 500;
+}
+
+#json-validation-result.valid {
+    color: #28a745;
+}
+
+#json-validation-result.invalid {
+    color: #dc3545;
+}
+
+/* Webhook Modal */
+.webhook-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.webhook-modal {
+    background: #fff;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+}
+
+.webhook-modal-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.webhook-modal-header h3 {
+    margin: 0;
+}
+
+.webhook-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.webhook-modal-body {
+    padding: 20px;
+}
+
+.webhook-modal-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Webhook Form Fields */
+.webhook-form-row {
+    margin-bottom: 15px;
+}
+
+.webhook-form-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.webhook-form-row .description {
+    margin-top: 5px;
+    color: #666;
+    font-size: 12px;
+}
+
+/* Test Results */
+.webhook-test-results {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.webhook-test-results h4 {
+    margin: 0 0 10px 0;
+}
+
+.test-result-item {
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    background: #fff;
+}
+
+.test-result-item.success {
+    border-color: #28a745;
+    background: #d4edda;
+}
+
+.test-result-item.error {
+    border-color: #dc3545;
+    background: #f8d7da;
+}
+
+/* Shortcode Section */
+.ptf-shortcode-section {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.ptf-shortcode-section h3 {
+    margin: 0 0 15px 0;
+}
+
+.shortcode-example {
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.shortcode-example h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+}
+
+.shortcode-example code {
+    display: block;
+    background: #263238;
+    color: #aed581;
+    padding: 10px 15px;
+    border-radius: 4px;
+    font-size: 13px;
+    overflow-x: auto;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .ptf-settings-section .form-table th {
+        width: auto;
+        display: block;
+        padding-bottom: 5px;
+    }
+
+    .ptf-settings-section .form-table td {
+        display: block;
+        padding-top: 0;
+    }
+
+    .webhook-modal {
+        width: 95%;
+        margin: 10px;
+    }
+}
+

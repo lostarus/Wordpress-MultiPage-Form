@@ -1,0 +1,1323 @@
+/**
+ * Multi-Step Popup Form Styles
+ * Pentest Quote Form - Cybersecurity Penetration Test Form
+ */
+
+/* =========================================
+   General Form Styles
+   ========================================= */
+.ptf-form-wrapper {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.ptf-form-title {
+    text-align: center;
+    margin-bottom: 8px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.ptf-form-subtitle {
+    text-align: center;
+    margin-bottom: 24px;
+    font-size: 16px;
+    color: #6b7280;
+}
+
+/* =========================================
+   Inline Form Özel Stilleri
+   ========================================= */
+.ptf-form-inline.ptf-form-wrapper {
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ptf-form-inline .ptf-form-title {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.ptf-form-inline .ptf-form-subtitle {
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+/* İlerleme Göstergesi - Inline */
+.ptf-form-inline .ptf-form-progress {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+}
+
+.ptf-form-inline .ptf-progress-step .step-number {
+    width: 34px;
+    height: 34px;
+    font-size: 14px;
+}
+
+.ptf-form-inline .ptf-progress-step .step-label {
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+.ptf-form-inline .ptf-progress-line {
+    width: 70px;
+    height: 2px;
+    margin: 0 12px;
+    margin-bottom: 24px;
+}
+
+/* Form Adımları - Inline */
+.ptf-form-inline .ptf-step-title {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.ptf-form-inline .ptf-step-description {
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+/* Checkbox Grubu - Inline */
+.ptf-form-inline .ptf-checkbox-group {
+    margin-bottom: 16px;
+}
+
+.ptf-form-inline .ptf-group-label {
+    font-size: 14px;
+    margin-bottom: 12px;
+}
+
+.ptf-form-inline .ptf-multi-select-hint {
+    font-size: 12px;
+}
+
+.ptf-form-inline .ptf-checkbox-list {
+    gap: 8px;
+}
+
+.ptf-form-inline .ptf-checkbox-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+}
+
+.ptf-form-inline .ptf-checkbox-mark {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-right: 10px;
+    border-radius: 4px;
+}
+
+.ptf-form-inline .ptf-checkbox-mark::after {
+    top: 2px;
+    left: 5px;
+    width: 4px;
+    height: 8px;
+}
+
+.ptf-form-inline .ptf-checkbox-label {
+    font-size: 13px;
+}
+
+/* Form Alanları - Inline */
+.ptf-form-inline .ptf-form-row {
+    margin-bottom: 14px;
+}
+
+.ptf-form-inline .ptf-form-row-2 {
+    gap: 12px;
+}
+
+.ptf-form-inline .ptf-form-group label {
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.ptf-form-inline .ptf-form-group input,
+.ptf-form-inline .ptf-form-group select,
+.ptf-form-inline .ptf-form-group textarea {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+}
+
+.ptf-form-inline .ptf-form-group textarea {
+    min-height: 80px;
+}
+
+/* KVKK Onay - Inline */
+.ptf-form-inline .ptf-consent-group {
+    margin-top: 6px;
+}
+
+.ptf-form-inline .ptf-consent-label {
+    padding: 12px 14px;
+    border-radius: 8px;
+}
+
+.ptf-form-inline .ptf-consent-label .ptf-checkbox-mark {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-right: 10px;
+    margin-top: 1px;
+}
+
+.ptf-form-inline .ptf-consent-label .ptf-checkbox-mark::after {
+    top: 2px;
+    left: 5px;
+    width: 4px;
+    height: 8px;
+}
+
+.ptf-form-inline .ptf-consent-text {
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* reCAPTCHA - Inline */
+.ptf-form-inline .ptf-recaptcha-placeholder {
+    margin: 12px 0;
+}
+
+/* Butonlar - Inline */
+.ptf-form-inline .ptf-form-actions {
+    margin-top: 18px;
+}
+
+.ptf-form-inline .ptf-btn {
+    padding: 10px 22px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: none;
+}
+
+.ptf-form-inline .ptf-btn-arrow {
+    font-size: 16px;
+}
+
+/* Başarı Mesajı - Inline */
+.ptf-form-inline .ptf-form-success {
+    padding: 30px 16px;
+}
+
+.ptf-form-inline .ptf-form-success h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.ptf-form-inline .ptf-form-success p {
+    font-size: 14px;
+}
+
+.ptf-form-inline .ptf-success-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+/* Yükleniyor - Inline */
+.ptf-form-inline .ptf-form-loading {
+    border-radius: 12px;
+}
+
+.ptf-form-inline .ptf-spinner {
+    width: 40px;
+    height: 40px;
+}
+
+.ptf-form-inline .ptf-form-loading p {
+    font-size: 14px;
+    margin-top: 12px;
+}
+
+/* =========================================
+   Popup Header
+   ========================================= */
+.ptf-popup-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.ptf-popup-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 8px 0;
+}
+
+.ptf-popup-subtitle {
+    font-size: 15px;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* =========================================
+   İlerleme Göstergesi
+   ========================================= */
+.ptf-form-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.ptf-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.ptf-progress-step .step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.ptf-progress-step.active .step-number,
+.ptf-progress-step.completed .step-number {
+    background: linear-gradient(135deg, #2F7CFF 0%, #1a5fd4 100%);
+    color: #fff;
+}
+
+.ptf-progress-step .step-label {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 500;
+    text-align: center;
+    max-width: 100px;
+}
+
+.ptf-progress-step.active .step-label,
+.ptf-progress-step.completed .step-label {
+    color: #1a1a1a;
+}
+
+.ptf-progress-line {
+    width: 100px;
+    height: 3px;
+    background: #e5e7eb;
+    margin: 0 16px;
+    margin-bottom: 28px;
+    position: relative;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.ptf-progress-line::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(135deg, #2F7CFF 0%, #1a5fd4 100%);
+    transition: width 0.4s ease;
+}
+
+.ptf-multistep-form[data-current-step="2"] .ptf-progress-line::after {
+    width: 100%;
+}
+
+/* =========================================
+   Form Adımları
+   ========================================= */
+.ptf-form-step {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.ptf-form-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.ptf-step-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.ptf-step-description {
+    font-size: 14px;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+/* =========================================
+   Checkbox Listesi (Test Türleri)
+   ========================================= */
+.ptf-checkbox-group {
+    margin-bottom: 24px;
+}
+
+.ptf-group-label {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 16px;
+}
+
+.ptf-multi-select-hint {
+    font-size: 13px;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.ptf-checkbox-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.ptf-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ptf-checkbox-item:hover {
+    border-color: #2F7CFF;
+    background: #f0f7ff;
+}
+
+.ptf-checkbox-item input[type="checkbox"] {
+    display: none;
+}
+
+.ptf-checkbox-item input[type="checkbox"]:checked + .ptf-checkbox-mark {
+    background: linear-gradient(135deg, #2F7CFF 0%, #1a5fd4 100%);
+    border-color: #2F7CFF;
+}
+
+.ptf-checkbox-item input[type="checkbox"]:checked + .ptf-checkbox-mark::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.ptf-checkbox-item input[type="checkbox"]:checked ~ .ptf-checkbox-label {
+    color: #1a5fd4;
+    font-weight: 500;
+}
+
+.ptf-checkbox-mark {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    margin-right: 12px;
+    position: relative;
+    transition: all 0.2s ease;
+    background: #fff;
+}
+
+.ptf-checkbox-mark::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 7px;
+    width: 5px;
+    height: 10px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.ptf-checkbox-label {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.4;
+}
+
+/* Checkbox group error state */
+.ptf-checkbox-group.has-error .ptf-checkbox-list {
+    border: 2px solid #ef4444;
+    border-radius: 12px;
+    padding: 8px;
+    background: #fef2f2;
+}
+
+/* =========================================
+   Form Alanları
+   ========================================= */
+.ptf-form-row {
+    margin-bottom: 20px;
+}
+
+.ptf-form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.ptf-form-group {
+    position: relative;
+}
+
+.ptf-form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.ptf-form-group label .required {
+    color: #ef4444;
+}
+
+.ptf-form-group label .optional {
+    color: #9ca3af;
+    font-weight: 400;
+    font-size: 12px;
+}
+
+.ptf-form-group input,
+.ptf-form-group select,
+.ptf-form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    font-size: 15px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f9fafb;
+    color: #1a1a1a;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.ptf-form-group input:focus,
+.ptf-form-group select:focus,
+.ptf-form-group textarea:focus {
+    outline: none;
+    border-color: #2F7CFF;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(47, 124, 255, 0.1);
+}
+
+.ptf-form-group input::placeholder,
+.ptf-form-group textarea::placeholder {
+    color: #9ca3af;
+}
+
+.ptf-form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.ptf-form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+/* Field hint */
+.ptf-field-hint {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+/* Hata durumu */
+.ptf-form-group.has-error input,
+.ptf-form-group.has-error select,
+.ptf-form-group.has-error textarea {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+.ptf-field-error {
+    display: none;
+    font-size: 12px;
+    color: #ef4444;
+    margin-top: 4px;
+}
+
+.ptf-form-group.has-error .ptf-field-error,
+.ptf-checkbox-group.has-error .ptf-field-error,
+.ptf-consent-group.has-error .ptf-field-error {
+    display: block;
+}
+
+/* =========================================
+   Form Mesaj Kutuları (Hata/Bilgi)
+   ========================================= */
+.ptf-form-message {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.ptf-form-error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+.ptf-form-message .ptf-message-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ptf-form-error-message .ptf-message-icon svg {
+    stroke: #dc2626;
+}
+
+.ptf-form-message .ptf-message-text {
+    flex: 1;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.ptf-form-message .ptf-message-close {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.ptf-form-error-message .ptf-message-close {
+    color: #dc2626;
+}
+
+.ptf-form-error-message .ptf-message-close:hover {
+    background: rgba(220, 38, 38, 0.1);
+}
+
+/* =========================================
+   KVKK Onay Alanı
+   ========================================= */
+.ptf-consent-group {
+    margin-top: 8px;
+}
+
+.ptf-consent-label {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    padding: 16px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.ptf-consent-label:hover {
+    border-color: #2F7CFF;
+}
+
+.ptf-consent-label input[type="checkbox"] {
+    display: none;
+}
+
+.ptf-consent-label .ptf-checkbox-mark {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    margin-right: 12px;
+    position: relative;
+    transition: all 0.2s ease;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.ptf-consent-label .ptf-checkbox-mark::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 7px;
+    width: 5px;
+    height: 10px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.ptf-consent-label input[type="checkbox"]:checked + .ptf-checkbox-mark {
+    background: linear-gradient(135deg, #2F7CFF 0%, #1a5fd4 100%);
+    border-color: #2F7CFF;
+}
+
+.ptf-consent-label input[type="checkbox"]:checked + .ptf-checkbox-mark::after {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.ptf-consent-text {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.5;
+}
+
+.ptf-consent-text a {
+    color: #2F7CFF;
+    text-decoration: underline;
+}
+
+.ptf-consent-text a:hover {
+    color: #1a5fd4;
+}
+
+.ptf-consent-group.has-error .ptf-consent-label {
+    border-color: #ef4444;
+    background: #fef2f2;
+}
+
+/* =========================================
+   reCAPTCHA Placeholder
+   ========================================= */
+.ptf-recaptcha-placeholder {
+    margin: 16px 0;
+}
+
+/* =========================================
+   Form Butonları
+   ========================================= */
+.ptf-form-actions {
+    margin-top: 32px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ptf-form-actions-dual {
+    justify-content: space-between;
+}
+
+.ptf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ptf-btn-next,
+.ptf-btn-submit {
+    background: linear-gradient(135deg, #2F7CFF 0%, #1a5fd4 100%);
+    color: #fff;
+}
+
+.ptf-btn-next:hover,
+.ptf-btn-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(47, 124, 255, 0.4);
+}
+
+.ptf-btn-prev {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.ptf-btn-prev:hover {
+    background: #e5e7eb;
+}
+
+.ptf-btn-arrow {
+    font-size: 18px;
+}
+
+.ptf-btn-icon svg {
+    display: block;
+}
+
+.ptf-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* =========================================
+   Popup Overlay
+   ========================================= */
+.ptf-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.ptf-popup-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.ptf-popup-container {
+    position: relative;
+    width: 90%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    padding: 40px;
+    transform: scale(0.9) translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.ptf-popup-overlay.active .ptf-popup-container {
+    transform: scale(1) translateY(0);
+}
+
+.ptf-popup-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: #f3f4f6;
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ptf-popup-close:hover {
+    background: #e5e7eb;
+    color: #1a1a1a;
+}
+
+/* =========================================
+   Popup Tetikleyici Buton
+   ========================================= */
+.ptf-popup-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #2F7CFF 0%, #1a5fd4 100%);
+    color: #fff;
+    border: none !important;
+    outline: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(47, 124, 255, 0.3);
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.ptf-popup-trigger:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(47, 124, 255, 0.4);
+}
+
+.ptf-popup-trigger:focus {
+    outline: none;
+    box-shadow: 0 4px 15px rgba(47, 124, 255, 0.3);
+}
+
+.ptf-popup-trigger:active {
+    transform: translateY(-1px);
+}
+
+/* =========================================
+   Başarı Mesajı
+   ========================================= */
+.ptf-form-success {
+    text-align: center;
+    padding: 40px 20px;
+    animation: scaleIn 0.4s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.ptf-success-icon {
+    margin-bottom: 24px;
+    color: #B7FF10;
+}
+
+.ptf-success-icon svg {
+    display: inline-block;
+}
+
+.ptf-form-success h3 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 12px;
+}
+
+.ptf-form-success p {
+    font-size: 16px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+
+/* =========================================
+   Yükleniyor Göstergesi
+   ========================================= */
+.ptf-form-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    z-index: 10;
+}
+
+.ptf-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #2F7CFF;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ptf-form-loading p {
+    margin-top: 16px;
+    font-size: 15px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* =========================================
+   Responsive Tasarım
+   ========================================= */
+@media (max-width: 768px) {
+    .ptf-form-wrapper {
+        padding: 20px;
+    }
+
+    .ptf-popup-container {
+        padding: 24px;
+        width: 95%;
+        max-height: 85vh;
+    }
+
+    .ptf-form-row-2 {
+        grid-template-columns: 1fr;
+    }
+
+    .ptf-checkbox-list {
+        grid-template-columns: 1fr;
+    }
+
+    .ptf-form-progress {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .ptf-progress-line {
+        width: 3px;
+        height: 30px;
+        margin: 8px 0;
+    }
+
+    .ptf-progress-line::after {
+        width: 100%;
+        height: 0;
+        transition: height 0.4s ease;
+    }
+
+    .ptf-multistep-form[data-current-step="2"] .ptf-progress-line::after {
+        height: 100%;
+        width: 100%;
+    }
+
+    .ptf-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .ptf-form-actions-dual {
+        gap: 12px;
+    }
+
+    .ptf-step-title {
+        font-size: 18px;
+    }
+
+    .ptf-popup-title {
+        font-size: 22px;
+    }
+
+    .ptf-form-title {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ptf-form-progress {
+        display: none;
+    }
+
+    .ptf-form-actions-dual {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+
+    .ptf-form-actions-dual .ptf-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ptf-checkbox-item {
+        padding: 12px;
+    }
+
+    .ptf-checkbox-label {
+        font-size: 13px;
+    }
+}
+
+/* =========================================
+   Inline Form - Responsive
+   ========================================= */
+@media (max-width: 768px) {
+    .ptf-form-inline.ptf-form-wrapper {
+        padding: 16px;
+    }
+
+    .ptf-form-inline .ptf-form-title {
+        font-size: 20px;
+    }
+
+    .ptf-form-inline .ptf-form-subtitle {
+        font-size: 13px;
+        margin-bottom: 12px;
+    }
+
+    .ptf-form-inline .ptf-form-progress {
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+    }
+
+    .ptf-form-inline .ptf-progress-step .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    .ptf-form-inline .ptf-progress-line {
+        height: 20px;
+        width: 2px;
+        margin: 4px 0;
+        margin-bottom: 0;
+    }
+
+    .ptf-form-inline .ptf-step-title {
+        font-size: 16px;
+    }
+
+    .ptf-form-inline .ptf-step-description {
+        font-size: 12px;
+        margin-bottom: 12px;
+    }
+
+    .ptf-form-inline .ptf-checkbox-item {
+        padding: 8px 10px;
+    }
+
+    .ptf-form-inline .ptf-checkbox-label {
+        font-size: 12px;
+    }
+
+    .ptf-form-inline .ptf-form-group input,
+    .ptf-form-inline .ptf-form-group select,
+    .ptf-form-inline .ptf-form-group textarea {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .ptf-form-inline .ptf-consent-label {
+        padding: 10px 12px;
+    }
+
+    .ptf-form-inline .ptf-consent-text {
+        font-size: 11px;
+    }
+
+    .ptf-form-inline .ptf-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .ptf-form-inline .ptf-form-actions {
+        margin-top: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ptf-form-inline.ptf-form-wrapper {
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .ptf-form-inline .ptf-form-title {
+        font-size: 18px;
+    }
+
+    .ptf-form-inline .ptf-checkbox-list {
+        gap: 6px;
+    }
+
+    .ptf-form-inline .ptf-checkbox-mark {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        margin-right: 8px;
+    }
+
+    .ptf-form-inline .ptf-form-row {
+        margin-bottom: 10px;
+    }
+
+    .ptf-form-inline .ptf-consent-label .ptf-checkbox-mark {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+    }
+}
+
+/* =========================================
+   Test Detay Bölümleri (Adım 2)
+   ========================================= */
+.ptf-test-questions {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+.ptf-test-section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.ptf-test-icon {
+    font-size: 24px;
+    margin-right: 12px;
+}
+
+.ptf-test-section-header h5 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.ptf-test-questions .ptf-form-row {
+    margin-bottom: 12px;
+}
+
+.ptf-test-questions .ptf-form-row:last-child {
+    margin-bottom: 0;
+}
+
+.ptf-test-questions .ptf-form-group label {
+    font-size: 13px;
+    color: #374151;
+    margin-bottom: 4px;
+}
+
+.ptf-test-questions .ptf-form-group input,
+.ptf-test-questions .ptf-form-group select {
+    padding: 10px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #fff;
+}
+
+.ptf-test-questions .ptf-form-group input:focus,
+.ptf-test-questions .ptf-form-group select:focus {
+    border-color: #2F7CFF;
+    box-shadow: 0 0 0 3px rgba(47, 124, 255, 0.1);
+    outline: none;
+}
+
+/* Genel Bilgiler Özel Stili */
+.ptf-general-questions {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-color: #bae6fd;
+}
+
+.ptf-general-questions .ptf-test-section-header {
+    border-bottom-color: #bae6fd;
+}
+
+/* Inline form için test detay stilleri */
+.ptf-form-inline .ptf-test-questions {
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.ptf-form-inline .ptf-test-section-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+}
+
+.ptf-form-inline .ptf-test-icon {
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+.ptf-form-inline .ptf-test-section-header h5 {
+    font-size: 14px;
+}
+
+.ptf-form-inline .ptf-test-questions .ptf-form-group label {
+    font-size: 12px;
+}
+
+.ptf-form-inline .ptf-test-questions .ptf-form-group input,
+.ptf-form-inline .ptf-test-questions .ptf-form-group select {
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+/* Responsive - Test Detay Bölümleri */
+@media (max-width: 768px) {
+    .ptf-test-questions {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .ptf-test-section-header h5 {
+        font-size: 14px;
+    }
+
+    .ptf-test-icon {
+        font-size: 20px;
+        margin-right: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ptf-test-questions {
+        padding: 12px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+
+    .ptf-test-section-header {
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+    }
+
+    .ptf-test-icon {
+        font-size: 18px;
+        margin-right: 8px;
+    }
+
+    .ptf-test-section-header h5 {
+        font-size: 13px;
+    }
+}
+

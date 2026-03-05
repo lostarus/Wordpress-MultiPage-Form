@@ -1,0 +1,1463 @@
+<?php
+/**
+ * Form Settings - WordPress Admin Panel
+ * Manage email, colors and other settings
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class PTF_Form_Settings {
+
+    private static $instance = null;
+    private $option_name = 'ptf_settings';
+
+    public static function get_instance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    public function __construct() {
+        add_action('admin_menu', array($this, 'add_settings_page'), 20);
+        add_action('admin_init', array($this, 'register_settings'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_color_picker'));
+    }
+
+    /**
+     * Default test types
+     */
+    public static function get_default_test_types() {
+        return array(
+            array('key' => 'internal-network', 'label' => 'Internal Network Penetration Test', 'active' => true),
+            array('key' => 'external-network', 'label' => 'External Network / Internet Penetration Test', 'active' => true),
+            array('key' => 'web-application', 'label' => 'Web Application Penetration Test', 'active' => true),
+            array('key' => 'api-security', 'label' => 'API Security Test', 'active' => true),
+            array('key' => 'mobile-application', 'label' => 'Mobile Application Penetration Test', 'active' => true),
+            array('key' => 'wireless-network', 'label' => 'Wireless Network (Wi-Fi) Penetration Test', 'active' => true),
+            array('key' => 'social-engineering', 'label' => 'Social Engineering Test', 'active' => true),
+            array('key' => 'ddos-simulation', 'label' => 'DDoS Resilience Test', 'active' => true),
+        );
+    }
+
+    /**
+     * Get test types (key => label format)
+     */
+    public static function get_test_types() {
+        $settings = get_option('ptf_settings', array());
+        $test_types = isset($settings['test_types']) ? $settings['test_types'] : self::get_default_test_types();
+
+        $result = array();
+        foreach ($test_types as $type) {
+            if (!empty($type['active'])) {
+                $result[$type['key']] = $type['label'];
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Get all test types (including active/inactive)
+     */
+    public static function get_all_test_types() {
+        $settings = get_option('ptf_settings', array());
+        return isset($settings['test_types']) ? $settings['test_types'] : self::get_default_test_types();
+    }
+
+    /**
+     * Default settings
+     */
+    public static function get_defaults() {
+        return array(
+            'notification_email' => get_option('admin_email'),
+            'primary_color' => '#2F7CFF',
+            'secondary_color' => '#B7FF10',
+            'button_text' => __('Get Quick Quote', 'pentest-quote-form'),
+            'success_message' => __('Your quote request has been received successfully. Our expert team will contact you shortly.', 'pentest-quote-form'),
+            'kvkk_url' => '/privacy-notice',
+            'privacy_url' => '/privacy-policy',
+            'send_auto_reply' => '1',
+            'recaptcha_site_key' => '',
+            'recaptcha_secret_key' => '',
+            'test_types' => self::get_default_test_types(),
+            // Data saving settings
+            'save_to_database' => '1',
+            'send_email_notification' => '1',
+            // Webhook/API integrations
+            'enable_webhooks' => '0',
+            'webhooks' => array(),
+        );
+    }
+
+    /**
+     * Get setting
+     */
+    public static function get_setting($key) {
+        $settings = get_option('ptf_settings', array());
+        $defaults = self::get_defaults();
+
+        // Return setting if exists (including empty string or '0')
+        if (isset($settings[$key])) {
+            return $settings[$key];
+        }
+
+        return isset($defaults[$key]) ? $defaults[$key] : '';
+    }
+
+    /**
+     * Get all settings
+     */
+    public static function get_all_settings() {
+        $settings = get_option('ptf_settings', array());
+        return wp_parse_args($settings, self::get_defaults());
+    }
+
+    /**
+     * Enqueue admin scripts and styles
+     */
+    public function enqueue_color_picker($hook) {
+        if (strpos($hook, 'ptf-settings') === false) {
+            return;
+        }
+
+        // WordPress color picker
+        wp_enqueue_style('wp-color-picker');
+        wp_enqueue_script('wp-color-picker');
+        wp_enqueue_script('jquery-ui-sortable');
+
+        // Admin Settings CSS
+        wp_enqueue_style(
+            'ptf-admin-settings',
+            PTF_PLUGIN_URL . 'assets/css/admin-settings.css',
+            array(),
+            PTF_VERSION
+        );
+
+        // Admin Utilities JS (shared functions)
+        wp_enqueue_script(
+            'ptf-admin-utils',
+            PTF_PLUGIN_URL . 'assets/js/admin-utils.js',
+            array(),
+            PTF_VERSION,
+            true
+        );
+
+        // Admin Settings JS
+        wp_enqueue_script(
+            'ptf-admin-settings',
+            PTF_PLUGIN_URL . 'assets/js/admin-settings.js',
+            array('jquery', 'wp-color-picker', 'ptf-admin-utils'),
+            PTF_VERSION,
+            true
+        );
+
+        // Localize script
+        wp_localize_script('ptf-admin-settings', 'ptfSettingsAdmin', array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('ptf_test_webhooks'),
+            'i18n' => array(
+                'noWebhooks' => __('No webhooks configured yet.', 'pentest-quote-form'),
+                'name' => __('Name', 'pentest-quote-form'),
+                'type' => __('Type', 'pentest-quote-form'),
+                'url' => __('URL', 'pentest-quote-form'),
+                'status' => __('Status', 'pentest-quote-form'),
+                'actions' => __('Actions', 'pentest-quote-form'),
+                'active' => __('Active', 'pentest-quote-form'),
+                'inactive' => __('Inactive', 'pentest-quote-form'),
+                'edit' => __('Edit', 'pentest-quote-form'),
+                'delete' => __('Delete', 'pentest-quote-form'),
+                'addWebhook' => __('Add Webhook', 'pentest-quote-form'),
+                'editWebhook' => __('Edit Webhook', 'pentest-quote-form'),
+                'method' => __('Method', 'pentest-quote-form'),
+                'authType' => __('Authentication', 'pentest-quote-form'),
+                'noAuth' => __('None', 'pentest-quote-form'),
+                'authValue' => __('Auth Value', 'pentest-quote-form'),
+                'authValueDesc' => __('Token, username:password, or API key', 'pentest-quote-form'),
+                'cancel' => __('Cancel', 'pentest-quote-form'),
+                'save' => __('Save', 'pentest-quote-form'),
+                'requiredFields' => __('Name and URL are required.', 'pentest-quote-form'),
+                'confirmDelete' => __('Are you sure you want to delete this webhook?', 'pentest-quote-form'),
+                'validJson' => __('Valid JSON', 'pentest-quote-form'),
+                'invalidJson' => __('Invalid JSON:', 'pentest-quote-form'),
+                'formatError' => __('Cannot format invalid JSON', 'pentest-quote-form'),
+                'testing' => __('Testing...', 'pentest-quote-form'),
+                'testWebhooks' => __('Test Webhooks', 'pentest-quote-form'),
+                'testingWebhooks' => __('Testing webhooks...', 'pentest-quote-form'),
+                'testResults' => __('Test Results:', 'pentest-quote-form'),
+                'testError' => __('Test failed', 'pentest-quote-form'),
+                'ajaxError' => __('Connection error', 'pentest-quote-form'),
+            ),
+        ));
+    }
+
+    /**
+     * Add settings page to menu
+     */
+    public function add_settings_page() {
+        add_submenu_page(
+            'ptf-submissions',
+            __('Form Settings', 'pentest-quote-form'),
+            __('Settings', 'pentest-quote-form'),
+            'manage_options',
+            'ptf-settings',
+            array($this, 'render_settings_page')
+        );
+    }
+
+    /**
+     * Register settings
+     */
+    public function register_settings() {
+        register_setting(
+            'ptf_settings_group',
+            $this->option_name,
+            array($this, 'sanitize_settings')
+        );
+    }
+
+    /**
+     * Sanitize settings
+     */
+    public function sanitize_settings($input) {
+        $sanitized = array();
+
+        $sanitized['notification_email'] = isset($input['notification_email'])
+            ? sanitize_text_field($input['notification_email']) : '';
+
+        $sanitized['primary_color'] = isset($input['primary_color'])
+            ? sanitize_hex_color($input['primary_color']) : '#2F7CFF';
+
+        $sanitized['secondary_color'] = isset($input['secondary_color'])
+            ? sanitize_hex_color($input['secondary_color']) : '#B7FF10';
+
+        $sanitized['button_text'] = isset($input['button_text'])
+            ? sanitize_text_field($input['button_text']) : __('Get Quick Quote', 'pentest-quote-form');
+
+        $sanitized['success_message'] = isset($input['success_message'])
+            ? sanitize_textarea_field($input['success_message']) : '';
+
+        $sanitized['kvkk_url'] = isset($input['kvkk_url'])
+            ? esc_url_raw($input['kvkk_url']) : '/kvkk-aydinlatma-metni';
+
+        $sanitized['privacy_url'] = isset($input['privacy_url'])
+            ? esc_url_raw($input['privacy_url']) : '/gizlilik-politikasi';
+
+        $sanitized['send_auto_reply'] = isset($input['send_auto_reply']) ? '1' : '0';
+
+        $sanitized['recaptcha_site_key'] = isset($input['recaptcha_site_key'])
+            ? sanitize_text_field($input['recaptcha_site_key']) : '';
+
+        $sanitized['recaptcha_secret_key'] = isset($input['recaptcha_secret_key'])
+            ? sanitize_text_field($input['recaptcha_secret_key']) : '';
+
+        // Data saving settings
+        $sanitized['save_to_database'] = isset($input['save_to_database']) ? '1' : '0';
+        $sanitized['send_email_notification'] = isset($input['send_email_notification']) ? '1' : '0';
+
+        // Webhook/API integrations
+        $sanitized['enable_webhooks'] = isset($input['enable_webhooks']) ? '1' : '0';
+
+        // Process webhooks JSON
+        if (isset($input['webhooks_json']) && !empty($input['webhooks_json'])) {
+            $webhooks_data = json_decode(stripslashes($input['webhooks_json']), true);
+            if (is_array($webhooks_data)) {
+                $sanitized_webhooks = array();
+                foreach ($webhooks_data as $webhook) {
+                    if (!empty($webhook['name']) && !empty($webhook['url'])) {
+                        $sanitized_webhooks[] = array(
+                            'name' => sanitize_text_field($webhook['name']),
+                            'url' => esc_url_raw($webhook['url']),
+                            'method' => isset($webhook['method']) && in_array($webhook['method'], array('POST', 'PUT', 'PATCH')) ? $webhook['method'] : 'POST',
+                            'headers' => isset($webhook['headers']) && is_array($webhook['headers']) ? array_map('sanitize_text_field', $webhook['headers']) : array(),
+                            'auth_type' => isset($webhook['auth_type']) && in_array($webhook['auth_type'], array('none', 'bearer', 'basic', 'api_key')) ? $webhook['auth_type'] : 'none',
+                            'auth_value' => isset($webhook['auth_value']) ? sanitize_text_field($webhook['auth_value']) : '',
+                            'field_mapping' => isset($webhook['field_mapping']) && is_array($webhook['field_mapping']) ? $webhook['field_mapping'] : array(),
+                            'active' => isset($webhook['active']) ? (bool) $webhook['active'] : true,
+                            'type' => isset($webhook['type']) && in_array($webhook['type'], array('custom', 'power_automate', 'zapier', 'make')) ? $webhook['type'] : 'custom',
+                        );
+                    }
+                }
+                $sanitized['webhooks'] = $sanitized_webhooks;
+            } else {
+                $sanitized['webhooks'] = array();
+            }
+        } else {
+            // Keep existing webhooks
+            $current = get_option('ptf_settings', array());
+            $sanitized['webhooks'] = isset($current['webhooks']) ? $current['webhooks'] : array();
+        }
+
+        // Process test types
+        if (isset($input['test_types']) && is_array($input['test_types'])) {
+            $sanitized_types = array();
+            foreach ($input['test_types'] as $type) {
+                if (!empty($type['key']) && !empty($type['label'])) {
+                    $sanitized_types[] = array(
+                        'key' => sanitize_key($type['key']),
+                        'label' => sanitize_text_field($type['label']),
+                        'active' => isset($type['active']) ? true : false,
+                    );
+                }
+            }
+            $sanitized['test_types'] = $sanitized_types;
+        } else {
+            $sanitized['test_types'] = self::get_default_test_types();
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * Render settings page
+     */
+    public function render_settings_page() {
+        $settings = self::get_all_settings();
+        ?>
+        <div class="wrap">
+            <h1>
+                <span class="dashicons dashicons-admin-settings" style="margin-right: 8px;"></span>
+                <?php esc_html_e('Pentest Quote Form Settings', 'pentest-quote-form'); ?>
+            </h1>
+
+            <form method="post" action="options.php">
+                <?php settings_fields('ptf_settings_group'); ?>
+
+                <div class="ptf-settings-container">
+                    <!-- Email Settings -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-email"></span> <?php esc_html_e('Email Settings', 'pentest-quote-form'); ?></h2>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="notification_email"><?php esc_html_e('Notification Email Address', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="notification_email"
+                                           name="ptf_settings[notification_email]"
+                                           value="<?php echo esc_attr($settings['notification_email']); ?>"
+                                           class="regular-text"
+                                           placeholder="ornek@firmaniz.com">
+                                    <p class="description">
+                                        <?php esc_html_e('Email address to receive notifications when form is submitted.', 'pentest-quote-form'); ?><br>
+                                        <?php esc_html_e('For multiple addresses, separate with comma:', 'pentest-quote-form'); ?> <code>satis@firma.com, teknik@firma.com</code>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Auto Reply', 'pentest-quote-form'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox"
+                                               name="ptf_settings[send_auto_reply]"
+                                               value="1"
+                                               <?php checked($settings['send_auto_reply'], '1'); ?>>
+                                        <?php esc_html_e('Send automatic confirmation email to form submitter', 'pentest-quote-form'); ?>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Data Storage Settings -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-database"></span> <?php esc_html_e('Data Storage Settings', 'pentest-quote-form'); ?></h2>
+                        <p class="description" style="margin-bottom: 15px;">
+                            <?php esc_html_e('Define how form submissions will be processed. At least one option must be active.', 'pentest-quote-form'); ?>
+                        </p>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Save to Database', 'pentest-quote-form'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox"
+                                               name="ptf_settings[save_to_database]"
+                                               value="1"
+                                               id="save_to_database"
+                                               <?php checked($settings['save_to_database'], '1'); ?>>
+                                        <?php esc_html_e('Save form data to WordPress database', 'pentest-quote-form'); ?>
+                                    </label>
+                                    <p class="description">
+                                        <?php esc_html_e('When active, you can view all form submissions from the "Quote Requests" page.', 'pentest-quote-form'); ?>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Send Email Notification', 'pentest-quote-form'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox"
+                                               name="ptf_settings[send_email_notification]"
+                                               value="1"
+                                               id="send_email_notification"
+                                               <?php checked($settings['send_email_notification'], '1'); ?>>
+                                        <?php esc_html_e('Send notification email when form is submitted', 'pentest-quote-form'); ?>
+                                    </label>
+                                    <p class="description">
+                                        <?php esc_html_e('When active, notification will be sent to the email address specified above.', 'pentest-quote-form'); ?>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="ptf-data-storage-warning" id="data-storage-warning" style="display: none; margin-top: 15px; padding: 10px; border-radius: 4px; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;">
+                            ⚠️ <?php esc_html_e('Warning: At least one option must be active! Otherwise form data will not be saved anywhere.', 'pentest-quote-form'); ?>
+                        </div>
+                    </div>
+
+                    <!-- Color Settings -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-art"></span> <?php esc_html_e('Color Settings', 'pentest-quote-form'); ?></h2>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="primary_color"><?php esc_html_e('Primary Color', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="primary_color"
+                                           name="ptf_settings[primary_color]"
+                                           value="<?php echo esc_attr($settings['primary_color']); ?>"
+                                           class="ptf-color-picker"
+                                           data-default-color="#2F7CFF">
+                                    <p class="description"><?php esc_html_e('Used for buttons, active elements and highlights.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="secondary_color"><?php esc_html_e('Secondary Color', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="secondary_color"
+                                           name="ptf_settings[secondary_color]"
+                                           value="<?php echo esc_attr($settings['secondary_color']); ?>"
+                                           class="ptf-color-picker"
+                                           data-default-color="#B7FF10">
+                                    <p class="description"><?php esc_html_e('Used for success icons and highlight elements.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Renk Preview -->
+                        <div class="ptf-color-preview">
+                            <h4><?php esc_html_e('Preview', 'pentest-quote-form'); ?></h4>
+                            <div class="preview-buttons">
+                                <button type="button" class="preview-btn preview-btn-primary" id="preview-primary">
+                                    <?php esc_html_e('Get Quick Quote', 'pentest-quote-form'); ?>
+                                </button>
+                                <span class="preview-success" id="preview-secondary">✓ <?php esc_html_e('Success', 'pentest-quote-form'); ?></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Text Settings -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-editor-textcolor"></span> <?php esc_html_e('Text Settings', 'pentest-quote-form'); ?></h2>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="button_text"><?php esc_html_e('Default Button Text', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="button_text"
+                                           name="ptf_settings[button_text]"
+                                           value="<?php echo esc_attr($settings['button_text']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="success_message"><?php esc_html_e('Success Message', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <textarea id="success_message"
+                                              name="ptf_settings[success_message]"
+                                              rows="3"
+                                              class="large-text"><?php echo esc_textarea($settings['success_message']); ?></textarea>
+                                    <p class="description"><?php esc_html_e('Message displayed after form is successfully submitted.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Link Settings -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-admin-links"></span> <?php esc_html_e('Privacy KVKK & Gizlilik Linkleri Policy Links', 'pentest-quote-form'); ?></h2>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="kvkk_url"><?php esc_html_e('Privacy Notice URL', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="kvkk_url"
+                                           name="ptf_settings[kvkk_url]"
+                                           value="<?php echo esc_attr($settings['kvkk_url']); ?>"
+                                           class="regular-text"
+                                           placeholder="/kvkk-aydinlatma-metni">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="privacy_url"><?php esc_html_e('Privacy Policy URL', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="privacy_url"
+                                           name="ptf_settings[privacy_url]"
+                                           value="<?php echo esc_attr($settings['privacy_url']); ?>"
+                                           class="regular-text"
+                                           placeholder="/gizlilik-politikasi">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- reCAPTCHA Settings -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-shield"></span> <?php esc_html_e('reCAPTCHA Settings (Optional)', 'pentest-quote-form'); ?></h2>
+                        <p class="description" style="margin-bottom: 15px;">
+                            <?php esc_html_e('You can use Google reCAPTCHA v3 for bot protection.', 'pentest-quote-form'); ?>
+                            <?php esc_html_e('To get keys:', 'pentest-quote-form'); ?> <a href="https://www.google.com/recaptcha/admin/create" target="_blank">Google reCAPTCHA Admin</a>
+                            (<?php esc_html_e('Select reCAPTCHA v3', 'pentest-quote-form'); ?>)
+                        </p>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="recaptcha_site_key">Site Key</label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="recaptcha_site_key"
+                                           name="ptf_settings[recaptcha_site_key]"
+                                           value="<?php echo esc_attr($settings['recaptcha_site_key']); ?>"
+                                           class="large-text"
+                                           placeholder="6Lc...">
+                                    <p class="description">Google reCAPTCHA v3 Site Key</p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="recaptcha_secret_key">Secret Key</label>
+                                </th>
+                                <td>
+                                    <input type="password"
+                                           id="recaptcha_secret_key"
+                                           name="ptf_settings[recaptcha_secret_key]"
+                                           value="<?php echo esc_attr($settings['recaptcha_secret_key']); ?>"
+                                           class="large-text"
+                                           placeholder="6Lc...">
+                                    <p class="description">Google reCAPTCHA v3 Secret Key</p>
+                                </td>
+                            </tr>
+                        </table>
+                        <?php
+                        $recaptcha_active = !empty($settings['recaptcha_site_key']) && !empty($settings['recaptcha_secret_key']);
+                        ?>
+                        <div class="ptf-recaptcha-status" style="margin-top: 15px; padding: 10px; border-radius: 4px; <?php echo $recaptcha_active ? 'background: #d4edda; border: 1px solid #c3e6cb;' : 'background: #fff3cd; border: 1px solid #ffeeba;'; ?>">
+                            <?php if ($recaptcha_active): ?>
+                                <span style="color: #155724;">✅ <?php esc_html_e('reCAPTCHA active', 'pentest-quote-form'); ?></span>
+                            <?php else: ?>
+                                <span style="color: #856404;">⚠️ <?php esc_html_e('reCAPTCHA not configured (form will work without bot protection)', 'pentest-quote-form'); ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+
+                    <!-- Webhook/API Integrations -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-rest-api"></span> <?php esc_html_e('Webhook / API Integrations', 'pentest-quote-form'); ?></h2>
+                        <p class="description" style="margin-bottom: 15px;">
+                            <?php esc_html_e('Automatically send form data to external systems (Power Automate, Zapier, Make, custom API, etc.).', 'pentest-quote-form'); ?>
+                        </p>
+
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Webhook Integrations', 'pentest-quote-form'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox"
+                                               name="ptf_settings[enable_webhooks]"
+                                               value="1"
+                                               id="enable_webhooks"
+                                               <?php checked($settings['enable_webhooks'], '1'); ?>>
+                                        <?php esc_html_e('Enable Webhook/API integrations', 'pentest-quote-form'); ?>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div id="webhooks-config-section" style="<?php echo $settings['enable_webhooks'] !== '1' ? 'display:none;' : ''; ?> margin-top: 20px;">
+
+                            <!-- Hızlı Şablon Butonları -->
+                            <div class="webhook-templates" style="margin-bottom: 20px;">
+                                <h4 style="margin-bottom: 10px;"><?php esc_html_e('Quick Template Add:', 'pentest-quote-form'); ?></h4>
+                                <button type="button" class="button" onclick="addWebhookTemplate('power_automate')">
+                                    <span class="dashicons dashicons-cloud" style="vertical-align: middle;"></span> Power Automate
+                                </button>
+                                <button type="button" class="button" onclick="addWebhookTemplate('zapier')">
+                                    <span class="dashicons dashicons-randomize" style="vertical-align: middle;"></span> Zapier
+                                </button>
+                                <button type="button" class="button" onclick="addWebhookTemplate('make')">
+                                    <span class="dashicons dashicons-admin-generic" style="vertical-align: middle;"></span> Make (Integromat)
+                                </button>
+                                <button type="button" class="button" onclick="addWebhookTemplate('custom')">
+                                    <span class="dashicons dashicons-admin-tools" style="vertical-align: middle;"></span> <?php esc_html_e('Custom API', 'pentest-quote-form'); ?>
+                                </button>
+                            </div>
+
+                            <!-- Webhook List -->
+                            <div id="webhooks-list" class="webhooks-list">
+                                <?php
+                                $webhooks = isset($settings['webhooks']) ? $settings['webhooks'] : array();
+                                if (empty($webhooks)) {
+                                    echo '<p class="no-webhooks-message">' . esc_html__('Henüz webhook tanımlanmamış. Yukarıdaki şablonlardan birini kullanarak veya JSON editörü ile ekleyebilirsiniz.', 'pentest-quote-form') . '</p>';
+                                }
+                                ?>
+                            </div>
+
+                            <!-- JSON Editor -->
+                            <div class="webhook-json-editor" style="margin-top: 20px;">
+                                <h4>
+                                    <?php esc_html_e('JSON Configuration', 'pentest-quote-form'); ?>
+                                    <button type="button" class="button button-small" onclick="toggleJsonEditor()" style="margin-left: 10px;">
+                                        <span class="dashicons dashicons-editor-code" style="vertical-align: middle;"></span>
+                                        <?php esc_html_e('Toggle JSON Editor', 'pentest-quote-form'); ?>
+                                    </button>
+                                </h4>
+                                <div id="json-editor-container" style="display: none; margin-top: 10px;">
+                                    <textarea id="webhooks_json"
+                                              name="ptf_settings[webhooks_json]"
+                                              rows="15"
+                                              class="large-text code"
+                                              style="font-family: monospace; font-size: 12px;"
+                                              placeholder='[
+  {
+    "name": "Power Automate",
+    "type": "power_automate",
+    "url": "https://prod-xx.westeurope.logic.azure.com/workflows/...",
+    "method": "POST",
+    "active": true
+  }
+]'><?php echo esc_textarea(json_encode($webhooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea>
+                                    <p class="description">
+                                        <?php esc_html_e('You can edit webhook configuration in JSON format.', 'pentest-quote-form'); ?>
+                                        <a href="#" onclick="showJsonHelp(); return false;"><?php esc_html_e('Help with JSON format', 'pentest-quote-form'); ?></a>
+                                    </p>
+                                    <button type="button" class="button" onclick="validateJson()"><?php esc_html_e('Validate JSON', 'pentest-quote-form'); ?></button>
+                                    <button type="button" class="button" onclick="formatJson()"><?php esc_html_e('Format', 'pentest-quote-form'); ?></button>
+                                    <span id="json-validation-result" style="margin-left: 10px;"></span>
+                                </div>
+                            </div>
+
+                            <!-- JSON Help Modal -->
+                            <div id="json-help-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100000;">
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #fff; padding: 30px; border-radius: 8px; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                                    <h3 style="margin-top: 0;"><?php esc_html_e('Webhook JSON Configuration Format', 'pentest-quote-form'); ?></h3>
+                                    <button type="button" onclick="document.getElementById('json-help-modal').style.display='none'" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+
+                                    <h4><?php esc_html_e('Basic Structure:', 'pentest-quote-form'); ?></h4>
+                                    <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 11px;">[
+  {
+    "name": "Webhook Name",
+    "type": "custom|power_automate|zapier|make",
+    "url": "https://api.example.com/webhook",
+    "method": "POST|PUT|PATCH",
+    "active": true,
+    "auth_type": "none|bearer|basic|api_key",
+    "auth_value": "token veya credentials",
+    "headers": {
+      "Content-Type": "application/json",
+      "X-Custom-Header": "value"
+    },
+    "field_mapping": {
+      "api_field_name": "form_field_name",
+      "company_name": "company",
+      "contact_email": "email"
+    }
+  }
+]</pre>
+
+                                    <h4><?php esc_html_e('Power Automate Örneği:', 'pentest-quote-form'); ?></h4>
+                                    <pre style="background: #e8f4fc; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 11px;">{
+  "name": "Power Automate - Quote Notification",
+  "type": "power_automate",
+  "url": "https://prod-xx.westeurope.logic.azure.com/workflows/xxx/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=xxx",
+  "method": "POST",
+  "active": true
+}</pre>
+
+                                    <h4><?php esc_html_e('Custom API + Bearer Auth Örneği:', 'pentest-quote-form'); ?></h4>
+                                    <pre style="background: #f0f8e8; padding: 15px; border-radius: 4px; overflow-x: auto; font-size: 11px;">{
+  "name": "CRM Entegrasyonu",
+  "type": "custom",
+  "url": "https://api.crm.com/v1/leads",
+  "method": "POST",
+  "active": true,
+  "auth_type": "bearer",
+  "auth_value": "your-api-token-here",
+  "headers": {
+    "Content-Type": "application/json",
+    "X-Source": "ptf-form"
+  },
+  "field_mapping": {
+    "lead_name": "first_name",
+    "lead_email": "email",
+    "lead_phone": "phone",
+    "company": "company",
+    "services": "test_types"
+  }
+}</pre>
+
+                                    <h4><?php esc_html_e('Kullanılabilir Form Alanları:', 'pentest-quote-form'); ?></h4>
+                                    <ul style="font-size: 13px;">
+                                        <li><code>first_name</code> - <?php esc_html_e('İlgili kişi adı', 'pentest-quote-form'); ?></li>
+                                        <li><code>email</code> - <?php esc_html_e('E-posta adresi', 'pentest-quote-form'); ?></li>
+                                        <li><code>phone</code> - <?php esc_html_e('Telefon numarası', 'pentest-quote-form'); ?></li>
+                                        <li><code>company</code> - <?php esc_html_e('Kurum adı', 'pentest-quote-form'); ?></li>
+                                        <li><code>test_types</code> - <?php esc_html_e('Seçilen test türleri (array)', 'pentest-quote-form'); ?></li>
+                                        <li><code>submitted_at</code> - <?php esc_html_e('Gönderim tarihi', 'pentest-quote-form'); ?></li>
+                                        <li><code>page_url</code> - <?php esc_html_e('Formun gönderildiği sayfa', 'pentest-quote-form'); ?></li>
+                                        <li><em><?php esc_html_e('+ Dinamik soru alanları (soru key değerleri)', 'pentest-quote-form'); ?></em></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Test Butonu -->
+                            <div class="webhook-test-section" style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px;">
+                                <h4 style="margin-top: 0;"><?php esc_html_e('Webhook Testi', 'pentest-quote-form'); ?></h4>
+                                <p class="description"><?php esc_html_e('Yapılandırılmış webhook\'ları test verisi ile deneyin.', 'pentest-quote-form'); ?></p>
+                                <button type="button" class="button button-secondary" id="test-webhooks-btn" onclick="testWebhooks()">
+                                    <span class="dashicons dashicons-controls-play" style="vertical-align: middle;"></span>
+                                    <?php esc_html_e('Webhook\'ları Test Et', 'pentest-quote-form'); ?>
+                                </button>
+                                <div id="webhook-test-results" style="margin-top: 15px; display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- Shortcode Bilgisi -->
+                    <div class="ptf-settings-section ptf-shortcode-info">
+                        <h2><span class="dashicons dashicons-shortcode"></span> <?php esc_html_e('Shortcode Kullanımı', 'pentest-quote-form'); ?></h2>
+                        <div class="shortcode-examples">
+                            <div class="shortcode-item">
+                                <h4><?php esc_html_e('Popup Button', 'pentest-quote-form'); ?></h4>
+                                <code>[ptf_popup_trigger]</code>
+                                <p><?php esc_html_e('Varsayılan ayarlarla popup butonu', 'pentest-quote-form'); ?></p>
+                            </div>
+                            <div class="shortcode-item">
+                                <h4><?php esc_html_e('Özel Metin ile', 'pentest-quote-form'); ?></h4>
+                                <code>[ptf_popup_trigger text="Get Quote"]</code>
+                            </div>
+                            <div class="shortcode-item">
+                                <h4><?php esc_html_e('Özel Renklerle', 'pentest-quote-form'); ?></h4>
+                                <code>[ptf_popup_trigger text="Get Quote" primary="#FF5733" secondary="#33FF57"]</code>
+                            </div>
+                            <div class="shortcode-item">
+                                <h4><?php esc_html_e('Inline Form', 'pentest-quote-form'); ?></h4>
+                                <code>[ptf_multistep_form]</code>
+                            </div>
+                            <div class="shortcode-item">
+                                <h4><?php esc_html_e('Özel Renkli Inline Form', 'pentest-quote-form'); ?></h4>
+                                <code>[ptf_multistep_form primary="#FF5733" secondary="#33FF57"]</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <?php submit_button(__('Save Settings', 'pentest-quote-form')); ?>
+            </form>
+        </div>
+
+        <style>
+        .ptf-settings-container {
+            max-width: 900px;
+        }
+        .ptf-settings-section {
+            background: #fff;
+            border: 1px solid #ccd0d4;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .ptf-settings-section h2 {
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ptf-settings-section h2 .dashicons {
+            color: #2F7CFF;
+        }
+        .ptf-color-preview {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .ptf-color-preview h4 {
+            margin: 0 0 15px 0;
+        }
+        .preview-buttons {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .preview-btn-primary {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .preview-success {
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .ptf-shortcode-info .shortcode-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        .shortcode-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #2F7CFF;
+        }
+        .shortcode-item h4 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #666;
+        }
+        .shortcode-item code {
+            display: block;
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            word-break: break-all;
+        }
+        .shortcode-item p {
+            margin: 8px 0 0 0;
+            font-size: 12px;
+            color: #888;
+        }
+        </style>
+
+        <script>
+        jQuery(document).ready(function($) {
+            // Color picker başlat
+            $('.ptf-color-picker').wpColorPicker({
+                change: function(event, ui) {
+                    updatePreview();
+                },
+                clear: function() {
+                    updatePreview();
+                }
+            });
+
+            function updatePreview() {
+                var primary = $('#primary_color').val() || '#2F7CFF';
+                var secondary = $('#secondary_color').val() || '#B7FF10';
+
+                $('#preview-primary').css('background', 'linear-gradient(135deg, ' + primary + ' 0%, ' + adjustColor(primary, -20) + ' 100%)');
+                $('#preview-secondary').css({
+                    'background': secondary,
+                    'color': isLightColor(secondary) ? '#333' : '#fff'
+                });
+            }
+
+            function adjustColor(color, amount) {
+                var usePound = false;
+                if (color[0] === "#") {
+                    color = color.slice(1);
+                    usePound = true;
+                }
+                var num = parseInt(color, 16);
+                var r = Math.max(Math.min((num >> 16) + amount, 255), 0);
+                var g = Math.max(Math.min(((num >> 8) & 0x00FF) + amount, 255), 0);
+                var b = Math.max(Math.min((num & 0x0000FF) + amount, 255), 0);
+                return (usePound ? "#" : "") + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+            }
+
+            function isLightColor(color) {
+                var hex = color.replace('#', '');
+                var r = parseInt(hex.substr(0, 2), 16);
+                var g = parseInt(hex.substr(2, 2), 16);
+                var b = parseInt(hex.substr(4, 2), 16);
+                var brightness = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+                return brightness > 155;
+            }
+
+            // İlk yüklemede önizlemeyi güncelle
+            setTimeout(updatePreview, 100);
+
+            // Veri kaydetme seçenekleri kontrolü
+            function checkDataStorageOptions() {
+                var saveToDb = $('#save_to_database').is(':checked');
+                var sendEmail = $('#send_email_notification').is(':checked');
+
+                if (!saveToDb && !sendEmail) {
+                    $('#data-storage-warning').show();
+                } else {
+                    $('#data-storage-warning').hide();
+                }
+            }
+
+            // Sayfa yüklendiğinde kontrol et
+            checkDataStorageOptions();
+
+            // Checkbox değişikliklerinde kontrol et
+            $('#save_to_database, #send_email_notification').on('change', function() {
+                checkDataStorageOptions();
+            });
+
+            // Webhook enable/disable toggle
+            $('#enable_webhooks').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#webhooks-config-section').slideDown();
+                } else {
+                    $('#webhooks-config-section').slideUp();
+                }
+            });
+
+            // Webhooks listesini render et
+            renderWebhooksList();
+        });
+
+        // Webhook şablonları
+        var webhookTemplates = {
+            power_automate: {
+                name: 'Power Automate',
+                type: 'power_automate',
+                url: '',
+                method: 'POST',
+                active: true,
+                auth_type: 'none',
+                auth_value: '',
+                headers: {},
+                field_mapping: {}
+            },
+            zapier: {
+                name: 'Zapier Webhook',
+                type: 'zapier',
+                url: '',
+                method: 'POST',
+                active: true,
+                auth_type: 'none',
+                auth_value: '',
+                headers: {},
+                field_mapping: {}
+            },
+            make: {
+                name: 'Make (Integromat)',
+                type: 'make',
+                url: '',
+                method: 'POST',
+                active: true,
+                auth_type: 'none',
+                auth_value: '',
+                headers: {},
+                field_mapping: {}
+            },
+            custom: {
+                name: '<?php esc_html_e('Custom API', 'pentest-quote-form'); ?>',
+                type: 'custom',
+                url: '',
+                method: 'POST',
+                active: true,
+                auth_type: 'none',
+                auth_value: '',
+                headers: {'Content-Type': 'application/json'},
+                field_mapping: {}
+            }
+        };
+
+        function getWebhooksFromJson() {
+            try {
+                var json = jQuery('#webhooks_json').val();
+                if (!json || json.trim() === '' || json.trim() === '[]' || json.trim() === 'null') {
+                    return [];
+                }
+                return JSON.parse(json);
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveWebhooksToJson(webhooks) {
+            jQuery('#webhooks_json').val(JSON.stringify(webhooks, null, 2));
+            renderWebhooksList();
+        }
+
+        function addWebhookTemplate(type) {
+            var webhooks = getWebhooksFromJson();
+            var template = JSON.parse(JSON.stringify(webhookTemplates[type]));
+
+            // Benzersiz isim oluştur
+            var count = webhooks.filter(function(w) { return w.type === type; }).length + 1;
+            if (count > 1) {
+                template.name = template.name + ' ' + count;
+            }
+
+            // Open modal (index = -1 for new webhook)
+            openWebhookModal(template, -1);
+        }
+
+        function renderWebhooksList() {
+            var webhooks = getWebhooksFromJson();
+            var container = jQuery('#webhooks-list');
+
+            if (webhooks.length === 0) {
+                container.html('<p class="no-webhooks-message"><?php esc_html_e('Henüz webhook tanımlanmamış. Yukarıdaki şablonlardan birini kullanarak veya JSON editörü ile ekleyebilirsiniz.', 'pentest-quote-form'); ?></p>');
+                return;
+            }
+
+            var html = '<table class="wp-list-table widefat fixed striped" style="margin-top: 10px;">';
+            html += '<thead><tr>';
+            html += '<th style="width: 30px;"></th>';
+            html += '<th><?php esc_html_e('Ad', 'pentest-quote-form'); ?></th>';
+            html += '<th><?php esc_html_e('Type', 'pentest-quote-form'); ?></th>';
+            html += '<th><?php esc_html_e('URL', 'pentest-quote-form'); ?></th>';
+            html += '<th><?php esc_html_e('Durum', 'pentest-quote-form'); ?></th>';
+            html += '<th style="width: 120px;"><?php esc_html_e('Actions', 'pentest-quote-form'); ?></th>';
+            html += '</tr></thead><tbody>';
+
+            webhooks.forEach(function(webhook, index) {
+                var typeLabels = {
+                    'power_automate': '<span style="color: #0078d4;">⚡ Power Automate</span>',
+                    'zapier': '<span style="color: #ff4a00;">🔗 Zapier</span>',
+                    'make': '<span style="color: #6d4aff;">⚙️ Make</span>',
+                    'custom': '<span style="color: #333;">🔧 <?php esc_html_e('Özel', 'pentest-quote-form'); ?></span>'
+                };
+
+                var statusBadge = webhook.active
+                    ? '<span style="background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 3px; font-size: 11px;"><?php esc_html_e('Aktif', 'pentest-quote-form'); ?></span>'
+                    : '<span style="background: #f8d7da; color: #721c24; padding: 2px 8px; border-radius: 3px; font-size: 11px;"><?php esc_html_e('Pasif', 'pentest-quote-form'); ?></span>';
+
+                var urlShort = webhook.url ? (webhook.url.length > 40 ? webhook.url.substring(0, 40) + '...' : webhook.url) : '<em style="color: #999;"><?php esc_html_e('URL girilmemiş', 'pentest-quote-form'); ?></em>';
+
+                html += '<tr>';
+                html += '<td><span class="dashicons dashicons-menu" style="color: #ccc; cursor: move;"></span></td>';
+                html += '<td><strong>' + escapeHtml(webhook.name) + '</strong></td>';
+                html += '<td>' + (typeLabels[webhook.type] || webhook.type) + '</td>';
+                html += '<td title="' + escapeHtml(webhook.url || '') + '"><code style="font-size: 11px;">' + escapeHtml(urlShort) + '</code></td>';
+                html += '<td>' + statusBadge + '</td>';
+                html += '<td>';
+                html += '<button type="button" class="button button-small" onclick="editWebhook(' + index + ')" title="<?php esc_html_e('Edit', 'pentest-quote-form'); ?>"><span class="dashicons dashicons-edit" style="vertical-align: middle;"></span></button> ';
+                html += '<button type="button" class="button button-small" onclick="toggleWebhook(' + index + ')" title="<?php esc_html_e('Aktif/Pasif', 'pentest-quote-form'); ?>"><span class="dashicons dashicons-visibility" style="vertical-align: middle;"></span></button> ';
+                html += '<button type="button" class="button button-small" onclick="deleteWebhook(' + index + ')" title="<?php esc_html_e('Sil', 'pentest-quote-form'); ?>" style="color: #a00;"><span class="dashicons dashicons-trash" style="vertical-align: middle;"></span></button>';
+                html += '</td>';
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            container.html(html);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function editWebhook(index) {
+            var webhooks = getWebhooksFromJson();
+            var webhook = webhooks[index];
+            openWebhookModal(webhook, index);
+        }
+
+        function openWebhookModal(webhook, index) {
+            // Modal HTML oluştur
+            var isNew = (index === -1);
+            var modalTitle = isNew ? '<?php esc_html_e('Add New Webhook', 'pentest-quote-form'); ?>' : '<?php esc_html_e('Webhook Düzenle', 'pentest-quote-form'); ?>';
+
+            var modalHtml = '<div id="webhook-edit-modal" class="webhook-modal-overlay">' +
+                '<div class="webhook-modal">' +
+                    '<div class="webhook-modal-header">' +
+                        '<h3>' + modalTitle + '</h3>' +
+                        '<button type="button" class="webhook-modal-close" onclick="closeWebhookModal()">&times;</button>' +
+                    '</div>' +
+                    '<div class="webhook-modal-body">' +
+                        '<div class="webhook-form-row">' +
+                            '<label><?php esc_html_e('Webhook Adı', 'pentest-quote-form'); ?> <span class="required">*</span></label>' +
+                            '<input type="text" id="webhook-name" value="' + escapeHtml(webhook.name || '') + '" placeholder="<?php esc_html_e('Örn: Power Automate - CRM', 'pentest-quote-form'); ?>">' +
+                        '</div>' +
+                        '<div class="webhook-form-row">' +
+                            '<label><?php esc_html_e('Webhook Türü', 'pentest-quote-form'); ?></label>' +
+                            '<select id="webhook-type">' +
+                                '<option value="custom"' + (webhook.type === 'custom' ? ' selected' : '') + '><?php esc_html_e('Custom API', 'pentest-quote-form'); ?></option>' +
+                                '<option value="power_automate"' + (webhook.type === 'power_automate' ? ' selected' : '') + '>Power Automate</option>' +
+                                '<option value="zapier"' + (webhook.type === 'zapier' ? ' selected' : '') + '>Zapier</option>' +
+                                '<option value="make"' + (webhook.type === 'make' ? ' selected' : '') + '>Make (Integromat)</option>' +
+                            '</select>' +
+                        '</div>' +
+                        '<div class="webhook-form-row">' +
+                            '<label><?php esc_html_e('Webhook URL', 'pentest-quote-form'); ?> <span class="required">*</span></label>' +
+                            '<input type="url" id="webhook-url" value="' + escapeHtml(webhook.url || '') + '" placeholder="https://...">' +
+                            '<p class="field-description"><?php esc_html_e('Örn: https://prod-xx.westeurope.logic.azure.com/workflows/...', 'pentest-quote-form'); ?></p>' +
+                        '</div>' +
+                        '<div class="webhook-form-row">' +
+                            '<label><?php esc_html_e('HTTP Metodu', 'pentest-quote-form'); ?></label>' +
+                            '<select id="webhook-method">' +
+                                '<option value="POST"' + (webhook.method === 'POST' ? ' selected' : '') + '>POST</option>' +
+                                '<option value="PUT"' + (webhook.method === 'PUT' ? ' selected' : '') + '>PUT</option>' +
+                                '<option value="PATCH"' + (webhook.method === 'PATCH' ? ' selected' : '') + '>PATCH</option>' +
+                            '</select>' +
+                        '</div>' +
+                        '<div class="webhook-form-row">' +
+                            '<label><?php esc_html_e('Kimlik Doğrulama', 'pentest-quote-form'); ?></label>' +
+                            '<select id="webhook-auth-type" onchange="toggleAuthValue()">' +
+                                '<option value="none"' + (webhook.auth_type === 'none' || !webhook.auth_type ? ' selected' : '') + '><?php esc_html_e('Yok', 'pentest-quote-form'); ?></option>' +
+                                '<option value="bearer"' + (webhook.auth_type === 'bearer' ? ' selected' : '') + '>Bearer Token</option>' +
+                                '<option value="basic"' + (webhook.auth_type === 'basic' ? ' selected' : '') + '>Basic Auth (Base64)</option>' +
+                                '<option value="api_key"' + (webhook.auth_type === 'api_key' ? ' selected' : '') + '>API Key</option>' +
+                            '</select>' +
+                        '</div>' +
+                        '<div class="webhook-form-row" id="webhook-auth-value-row" style="' + (webhook.auth_type && webhook.auth_type !== 'none' ? '' : 'display:none;') + '">' +
+                            '<label id="webhook-auth-value-label"><?php esc_html_e('Token / Anahtar', 'pentest-quote-form'); ?></label>' +
+                            '<input type="text" id="webhook-auth-value" value="' + escapeHtml(webhook.auth_value || '') + '" placeholder="<?php esc_html_e('Token veya anahtar değeri', 'pentest-quote-form'); ?>">' +
+                            '<p class="field-description" id="webhook-auth-description"></p>' +
+                        '</div>' +
+                        '<div class="webhook-form-row">' +
+                            '<label><?php esc_html_e('Özel HTTP Header\'lar (Opsiyonel)', 'pentest-quote-form'); ?></label>' +
+                            '<div id="webhook-headers-container"></div>' +
+                            '<button type="button" class="button button-small" onclick="addHeaderRow()">' +
+                                '<span class="dashicons dashicons-plus-alt" style="vertical-align: middle;"></span> <?php esc_html_e('Header Ekle', 'pentest-quote-form'); ?>' +
+                            '</button>' +
+                        '</div>' +
+                        '<div class="webhook-form-row">' +
+                            '<label>' +
+                                '<input type="checkbox" id="webhook-active"' + (webhook.active !== false ? ' checked' : '') + '>' +
+                                ' <?php esc_html_e('Webhook Aktif', 'pentest-quote-form'); ?>' +
+                            '</label>' +
+                        '</div>' +
+                        '<hr style="margin: 20px 0;">' +
+                        '<div class="webhook-form-row">' +
+                            '<label><?php esc_html_e('Alan Eşleme (Field Mapping) - Opsiyonel', 'pentest-quote-form'); ?></label>' +
+                            '<p class="field-description" style="margin-bottom: 10px;"><?php esc_html_e('API farklı alan adları bekliyorsa, form alanlarını API alanlarına eşleyin.', 'pentest-quote-form'); ?></p>' +
+                            '<div id="webhook-field-mapping-container"></div>' +
+                            '<button type="button" class="button button-small" onclick="addFieldMappingRow()">' +
+                                '<span class="dashicons dashicons-plus-alt" style="vertical-align: middle;"></span> <?php esc_html_e('Eşleme Ekle', 'pentest-quote-form'); ?>' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="webhook-modal-footer">' +
+                        '<button type="button" class="button" onclick="closeWebhookModal()"><?php esc_html_e('İptal', 'pentest-quote-form'); ?></button>' +
+                        '<button type="button" class="button button-primary" onclick="saveWebhookFromModal(' + index + ')"><?php esc_html_e('Kaydet', 'pentest-quote-form'); ?></button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+
+            // Modal stillerini ekle
+            if (!document.getElementById('webhook-modal-styles')) {
+                var styles = document.createElement('style');
+                styles.id = 'webhook-modal-styles';
+                styles.textContent = '.webhook-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 100001; display: flex; align-items: center; justify-content: center; }' +
+                    '.webhook-modal { background: #fff; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }' +
+                    '.webhook-modal-header { padding: 15px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; }' +
+                    '.webhook-modal-header h3 { margin: 0; font-size: 16px; }' +
+                    '.webhook-modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #666; line-height: 1; padding: 0; }' +
+                    '.webhook-modal-close:hover { color: #000; }' +
+                    '.webhook-modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }' +
+                    '.webhook-modal-footer { padding: 15px 20px; border-top: 1px solid #ddd; display: flex; justify-content: flex-end; gap: 10px; background: #f9f9f9; }' +
+                    '.webhook-form-row { margin-bottom: 15px; }' +
+                    '.webhook-form-row label { display: block; font-weight: 600; margin-bottom: 5px; }' +
+                    '.webhook-form-row input[type="text"], .webhook-form-row input[type="url"], .webhook-form-row select { width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; }' +
+                    '.webhook-form-row input:focus, .webhook-form-row select:focus { border-color: #2F7CFF; outline: none; box-shadow: 0 0 0 2px rgba(47, 124, 255, 0.2); }' +
+                    '.webhook-form-row .required { color: #dc3545; }' +
+                    '.webhook-form-row .field-description { font-size: 12px; color: #666; margin-top: 5px; }' +
+                    '.header-row, .field-mapping-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; }' +
+                    '.header-row input, .field-mapping-row input, .field-mapping-row select { flex: 1; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; }' +
+                    '.header-row button, .field-mapping-row button { flex-shrink: 0; }';
+                document.head.appendChild(styles);
+            }
+
+            // Modal'ı ekle
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Mevcut header'ları yükle
+            if (webhook.headers && typeof webhook.headers === 'object') {
+                Object.keys(webhook.headers).forEach(function(key) {
+                    addHeaderRow(key, webhook.headers[key]);
+                });
+            }
+
+            // Mevcut field mapping'leri yükle
+            if (webhook.field_mapping && typeof webhook.field_mapping === 'object') {
+                Object.keys(webhook.field_mapping).forEach(function(key) {
+                    addFieldMappingRow(key, webhook.field_mapping[key]);
+                });
+            }
+
+            // Auth tipine göre açıklamayı güncelle
+            toggleAuthValue();
+        }
+
+        function closeWebhookModal() {
+            var modal = document.getElementById('webhook-edit-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function toggleAuthValue() {
+            var authType = document.getElementById('webhook-auth-type');
+            if (!authType) return;
+            var authTypeValue = authType.value;
+            var authValueRow = document.getElementById('webhook-auth-value-row');
+            var authLabel = document.getElementById('webhook-auth-value-label');
+            var authDesc = document.getElementById('webhook-auth-description');
+
+            if (authTypeValue === 'none') {
+                authValueRow.style.display = 'none';
+            } else {
+                authValueRow.style.display = 'block';
+                switch(authTypeValue) {
+                    case 'bearer':
+                        authLabel.textContent = 'Bearer Token';
+                        authDesc.textContent = '<?php esc_html_e('Header: Authorization: Bearer <token>', 'pentest-quote-form'); ?>';
+                        break;
+                    case 'basic':
+                        authLabel.textContent = 'Basic Auth (Base64)';
+                        authDesc.textContent = '<?php esc_html_e('Base64 encoded username:password', 'pentest-quote-form'); ?>';
+                        break;
+                    case 'api_key':
+                        authLabel.textContent = 'API Key';
+                        authDesc.textContent = '<?php esc_html_e('Header: X-API-Key: <key>', 'pentest-quote-form'); ?>';
+                        break;
+                }
+            }
+        }
+
+        function addHeaderRow(key, value) {
+            var container = document.getElementById('webhook-headers-container');
+            if (!container) return;
+            var html = '<div class="header-row">' +
+                '<input type="text" class="header-key" placeholder="<?php esc_html_e('Header Adı', 'pentest-quote-form'); ?>" value="' + escapeHtml(key || '') + '">' +
+                '<input type="text" class="header-value" placeholder="<?php esc_html_e('Header Değeri', 'pentest-quote-form'); ?>" value="' + escapeHtml(value || '') + '">' +
+                '<button type="button" class="button button-small" onclick="this.parentElement.remove()" style="color:#a00;"><span class="dashicons dashicons-no" style="vertical-align:middle;"></span></button>' +
+            '</div>';
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function addFieldMappingRow(apiField, formField) {
+            var container = document.getElementById('webhook-field-mapping-container');
+            if (!container) return;
+
+            // New structured fields (with nested path support)
+            var formFields = [
+                // Contact
+                {value: 'contact.name', label: 'contact.name (İletişim Adı)'},
+                {value: 'contact.email', label: 'contact.email (E-posta)'},
+                {value: 'contact.phone', label: 'contact.phone (Telefon)'},
+                {value: 'contact.company', label: 'contact.company (Şirket)'},
+                // Meta
+                {value: 'meta.submitted_at', label: 'meta.submitted_at (Gönderim Tarihi)'},
+                {value: 'meta.page_url', label: 'meta.page_url (Sayfa URL)'},
+                {value: 'meta.site_name', label: 'meta.site_name (Site Adı)'},
+                {value: 'meta.site_url', label: 'meta.site_url (Site URL)'},
+                // Selected Categories
+                {value: 'selected_categories.ids', label: 'selected_categories.ids (Kategori ID\'ler)'},
+                {value: 'selected_categories.names', label: 'selected_categories.names (Kategori Adları)'},
+                // Flat (geriye uyumluluk)
+                {value: 'first_name', label: 'first_name (flat)'},
+                {value: 'email', label: 'email (flat)'},
+                {value: 'phone', label: 'phone (flat)'},
+                {value: 'company', label: 'company (flat)'},
+                {value: 'test_types', label: 'test_types (flat)'},
+                {value: 'test_types_labels', label: 'test_types_labels (flat)'},
+                {value: 'submitted_at', label: 'submitted_at (flat)'},
+                {value: 'page_url', label: 'page_url (flat)'},
+            ];
+
+            var optionsHtml = '<option value=""><?php esc_html_e('Form alanı seçin', 'pentest-quote-form'); ?></option>';
+            formFields.forEach(function(field) {
+                var selected = (formField === field.value) ? ' selected' : '';
+                optionsHtml += '<option value="' + field.value + '"' + selected + '>' + field.label + '</option>';
+            });
+
+            var html = '<div class="field-mapping-row">' +
+                '<input type="text" class="mapping-api-field" placeholder="<?php esc_html_e('API Alan Adı', 'pentest-quote-form'); ?>" value="' + escapeHtml(apiField || '') + '">' +
+                '<select class="mapping-form-field">' + optionsHtml + '</select>' +
+                '<button type="button" class="button button-small" onclick="this.parentElement.remove()" style="color:#a00;"><span class="dashicons dashicons-no" style="vertical-align:middle;"></span></button>' +
+            '</div>';
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function saveWebhookFromModal(index) {
+            var name = document.getElementById('webhook-name').value.trim();
+            var url = document.getElementById('webhook-url').value.trim();
+
+            if (!name) {
+                alert('<?php esc_html_e('Webhook adı zorunludur.', 'pentest-quote-form'); ?>');
+                document.getElementById('webhook-name').focus();
+                return;
+            }
+            if (!url) {
+                alert('<?php esc_html_e('Webhook URL zorunludur.', 'pentest-quote-form'); ?>');
+                document.getElementById('webhook-url').focus();
+                return;
+            }
+
+            // Header'ları topla
+            var headers = {};
+            document.querySelectorAll('.header-row').forEach(function(row) {
+                var key = row.querySelector('.header-key').value.trim();
+                var value = row.querySelector('.header-value').value.trim();
+                if (key) {
+                    headers[key] = value;
+                }
+            });
+
+            // Field mapping'leri topla
+            var fieldMapping = {};
+            document.querySelectorAll('.field-mapping-row').forEach(function(row) {
+                var apiField = row.querySelector('.mapping-api-field').value.trim();
+                var formField = row.querySelector('.mapping-form-field').value;
+                if (apiField && formField) {
+                    fieldMapping[apiField] = formField;
+                }
+            });
+
+            var webhook = {
+                name: name,
+                type: document.getElementById('webhook-type').value,
+                url: url,
+                method: document.getElementById('webhook-method').value,
+                auth_type: document.getElementById('webhook-auth-type').value,
+                auth_value: document.getElementById('webhook-auth-value').value.trim(),
+                headers: headers,
+                field_mapping: fieldMapping,
+                active: document.getElementById('webhook-active').checked
+            };
+
+            var webhooks = getWebhooksFromJson();
+
+            if (index === -1) {
+                webhooks.push(webhook);
+            } else {
+                webhooks[index] = webhook;
+            }
+
+            saveWebhooksToJson(webhooks);
+            closeWebhookModal();
+        }
+
+        function toggleWebhook(index) {
+            var webhooks = getWebhooksFromJson();
+            webhooks[index].active = !webhooks[index].active;
+            saveWebhooksToJson(webhooks);
+        }
+
+        function deleteWebhook(index) {
+            if (confirm('<?php esc_html_e('Bu webhook\'u silmek istediğinizden emin misiniz?', 'pentest-quote-form'); ?>')) {
+                var webhooks = getWebhooksFromJson();
+                webhooks.splice(index, 1);
+                saveWebhooksToJson(webhooks);
+            }
+        }
+
+        function toggleJsonEditor() {
+            jQuery('#json-editor-container').slideToggle();
+        }
+
+        function showJsonHelp() {
+            document.getElementById('json-help-modal').style.display = 'block';
+        }
+
+        function validateJson() {
+            var textarea = document.getElementById('webhooks_json');
+            var result = document.getElementById('json-validation-result');
+
+            try {
+                JSON.parse(textarea.value);
+                result.innerHTML = '<span style="color: #155724;">✅ <?php esc_html_e('Geçerli JSON', 'pentest-quote-form'); ?></span>';
+                renderWebhooksList();
+            } catch (e) {
+                result.innerHTML = '<span style="color: #721c24;">❌ <?php esc_html_e('Geçersiz JSON:', 'pentest-quote-form'); ?> ' + e.message + '</span>';
+            }
+        }
+
+        function formatJson() {
+            var textarea = document.getElementById('webhooks_json');
+            try {
+                var json = JSON.parse(textarea.value);
+                textarea.value = JSON.stringify(json, null, 2);
+                validateJson();
+            } catch (e) {
+                alert('<?php esc_html_e('JSON formatlanamadı. Önce geçerli bir JSON girin.', 'pentest-quote-form'); ?>');
+            }
+        }
+
+        function testWebhooks() {
+            var btn = document.getElementById('test-webhooks-btn');
+            var results = document.getElementById('webhook-test-results');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="dashicons dashicons-update" style="vertical-align: middle; animation: rotation 1s infinite linear;"></span> <?php esc_html_e('Test ediliyor...', 'pentest-quote-form'); ?>';
+            results.style.display = 'block';
+            results.innerHTML = '<p><?php esc_html_e('Webhook\'lar test ediliyor...', 'pentest-quote-form'); ?></p>';
+
+            jQuery.ajax({
+                url: ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'ptf_test_webhooks',
+                    nonce: '<?php echo wp_create_nonce('ptf_test_webhooks'); ?>',
+                    webhooks: jQuery('#webhooks_json').val()
+                },
+                success: function(response) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="dashicons dashicons-controls-play" style="vertical-align: middle;"></span> <?php esc_html_e('Webhook\'ları Test Et', 'pentest-quote-form'); ?>';
+
+                    if (response.success) {
+                        var html = '<h4><?php esc_html_e('Test Sonuçları:', 'pentest-quote-form'); ?></h4>';
+                        response.data.results.forEach(function(r) {
+                            var statusColor = r.success ? '#155724' : '#721c24';
+                            var statusBg = r.success ? '#d4edda' : '#f8d7da';
+                            var statusIcon = r.success ? '✅' : '❌';
+
+                            html += '<div style="background: ' + statusBg + '; padding: 10px; margin-bottom: 5px; border-radius: 4px;">';
+                            html += '<strong>' + statusIcon + ' ' + escapeHtml(r.name) + '</strong><br>';
+                            html += '<small style="color: ' + statusColor + ';">' + escapeHtml(r.message) + '</small>';
+                            if (r.response_code) {
+                                html += ' <code>HTTP ' + r.response_code + '</code>';
+                            }
+                            html += '</div>';
+                        });
+                        results.innerHTML = html;
+                    } else {
+                        results.innerHTML = '<p style="color: #721c24;">❌ ' + response.data.message + '</p>';
+                    }
+                },
+                error: function() {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="dashicons dashicons-controls-play" style="vertical-align: middle;"></span> <?php esc_html_e('Webhook\'ları Test Et', 'pentest-quote-form'); ?>';
+                    results.innerHTML = '<p style="color: #721c24;">❌ <?php esc_html_e('Test sırasında bir hata oluştu.', 'pentest-quote-form'); ?></p>';
+                }
+            });
+        }
+
+        // CSS for rotation animation
+        var style = document.createElement('style');
+        style.textContent = '@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+        </script>
+        <?php
+    }
+}
+
+// Ayarlar sınıfını başlat
+PTF_Form_Settings::get_instance();
+
