@@ -96,8 +96,13 @@ Adds a button that opens a popup form when clicked.
 |-----------|---------|-------------|
 | `text` | "Get Quick Quote" | Button text |
 | `class` | - | Additional CSS class |
-| `primary` | #2F7CFF | Primary color |
+| `style` | - | Inline CSS styles |
+| `primary` | #2F7CFF | Primary/background color |
 | `secondary` | #B7FF10 | Secondary color |
+| `size` | medium | Button size: `small`, `medium`, `large`, `xlarge`, `custom` |
+| `padding_y` | - | Custom vertical padding in pixels (overrides size) |
+| `padding_x` | - | Custom horizontal padding in pixels (overrides size) |
+| `font_size` | - | Custom font size in pixels (overrides size) |
 
 #### Examples
 
@@ -112,6 +117,31 @@ Adds a button that opens a popup form when clicked.
 ```
 [ptf_popup_trigger text="Free Quote" primary="#FF5733" secondary="#33FF57"]
 ```
+
+#### Button Size Examples
+
+```
+[ptf_popup_trigger size="small"]
+[ptf_popup_trigger size="large"]
+[ptf_popup_trigger size="xlarge" text="Get Your Quote Now"]
+```
+
+#### Custom Size (px) Examples
+
+```
+[ptf_popup_trigger padding_y="20" padding_x="50" font_size="18"]
+[ptf_popup_trigger padding_y="30" padding_x="60" font_size="22" text="Request Quote"]
+```
+
+#### Button Size Reference
+
+| Size | Padding | Font Size |
+|------|---------|-----------|
+| small | 12px 24px | 14px |
+| medium | 16px 32px | 16px |
+| large | 20px 40px | 18px |
+| xlarge | 24px 48px | 20px |
+| custom | Your values | Your value |
 
 ---
 
@@ -169,6 +199,28 @@ Access all plugin settings from **WordPress Admin → Quote Requests → Setting
 |---------|---------|-------|
 | **Primary Color** | #2F7CFF | Buttons, active elements, highlights |
 | **Secondary Color** | #B7FF10 | Success icons, accent elements |
+| **Button Text Color** | #FFFFFF | Text color for popup trigger button |
+| **Button Size** | Medium | Size preset for popup trigger button |
+
+#### Button Size Options
+
+| Size | Description |
+|------|-------------|
+| **Small** | Compact size (12px 24px padding, 14px font) |
+| **Medium** | Default size (16px 32px padding, 16px font) |
+| **Large** | Larger size (20px 40px padding, 18px font) |
+| **Extra Large** | Biggest preset (24px 48px padding, 20px font) |
+| **Custom (px)** | Define your own padding and font size values |
+
+#### Custom Button Size
+
+When you select "Custom (px)" for Button Size, additional fields appear:
+
+| Field | Range | Default | Description |
+|-------|-------|---------|-------------|
+| **Vertical Padding** | 4-60 px | 16 | Top and bottom padding |
+| **Horizontal Padding** | 8-100 px | 32 | Left and right padding |
+| **Font Size** | 10-32 px | 16 | Button text size |
 
 ### Text Settings
 
@@ -531,12 +583,33 @@ Change colors from **Settings → Color Settings**:
 |-------|--------------|-------|
 | Primary Color | `--ptf-primary` | Buttons, active elements |
 | Secondary Color | `--ptf-secondary` | Success icon |
+| Button Text Color | `--ptf-button-text` | Popup trigger button text |
+
+### Button Size Settings
+
+Customize button size from **Settings → Color Settings → Button Size**:
+
+| Preset | Padding | Font Size |
+|--------|---------|-----------|
+| Small | 12px 24px | 14px |
+| Medium | 16px 32px | 16px |
+| Large | 20px 40px | 18px |
+| Extra Large | 24px 48px | 20px |
+| Custom | Your values | Your value |
 
 ### Changing Colors via Shortcode
 
 ```
 [ptf_popup_trigger primary="#E74C3C" secondary="#2ECC71"]
 [ptf_multistep_form primary="#9B59B6" secondary="#F1C40F"]
+```
+
+### Changing Button Size via Shortcode
+
+```
+[ptf_popup_trigger size="large"]
+[ptf_popup_trigger size="xlarge" text="Get Quote Now"]
+[ptf_popup_trigger padding_y="25" padding_x="50" font_size="20"]
 ```
 
 ### CSS Customization

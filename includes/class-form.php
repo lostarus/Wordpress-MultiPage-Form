@@ -141,7 +141,8 @@ class PTF_Multi_Step_Form {
         // Dynamic colors inline CSS
         $primary = $this->get_setting('primary_color', '#2F7CFF');
         $secondary = $this->get_setting('secondary_color', '#B7FF10');
-        $custom_css = $this->generate_color_css($primary, $secondary);
+        $button_text_color = $this->get_setting('button_text_color', '#ffffff');
+        $custom_css = $this->generate_color_css($primary, $secondary, $button_text_color);
         wp_add_inline_style('ptf-multistep-form', $custom_css);
 
         // reCAPTCHA
@@ -201,7 +202,7 @@ class PTF_Multi_Step_Form {
     /**
      * Generate dynamic color CSS
      */
-    private function generate_color_css($primary, $secondary) {
+    private function generate_color_css($primary, $secondary, $button_text_color = '#ffffff') {
         $primary_dark = $this->adjust_brightness($primary, -30);
 
         return "
@@ -209,6 +210,7 @@ class PTF_Multi_Step_Form {
             --ptf-primary: {$primary};
             --ptf-primary-dark: {$primary_dark};
             --ptf-secondary: {$secondary};
+            --ptf-button-text: {$button_text_color};
         }
         .ptf-progress-step.active .step-number,
         .ptf-progress-step.completed .step-number {
@@ -258,9 +260,11 @@ class PTF_Multi_Step_Form {
         .ptf-popup-trigger {
             background: linear-gradient(135deg, {$primary} 0%, {$primary_dark} 100%);
             box-shadow: 0 4px 15px " . $this->hex_to_rgba($primary, 0.3) . ";
+            color: {$button_text_color};
         }
         .ptf-popup-trigger:hover {
             box-shadow: 0 8px 25px " . $this->hex_to_rgba($primary, 0.4) . ";
+            color: {$button_text_color};
         }
         .ptf-spinner {
             border-top-color: {$primary};
@@ -1345,26 +1349,66 @@ class PTF_Multi_Step_Form {
 
     public function render_popup_trigger($atts) {
         $default_text = $this->get_setting('button_text', __('Get Quick Quote', 'pentest-quote-form'));
+        $default_size = $this->get_setting('button_size', 'medium');
 
         $atts = shortcode_atts(array(
             'text' => $default_text,
             'class' => '',
             'style' => '',
             'primary' => '',
-            'secondary' => ''
+            'secondary' => '',
+            'size' => $default_size,
+            'padding_y' => '',
+            'padding_x' => '',
+            'font_size' => ''
         ), $atts);
 
-        // Create inline style if custom color exists
+        // Build button classes
+        $button_classes = 'ptf-popup-trigger';
+
+        // Only add size class if not custom
+        if ($atts['size'] !== 'custom') {
+            $button_classes .= ' ptf-btn-' . esc_attr($atts['size']);
+        }
+
+        if (!empty($atts['class'])) {
+            $button_classes .= ' ' . $atts['class'];
+        }
+
+        // Create inline style
         $custom_style = $atts['style'];
+
+        // Custom color
         if (!empty($atts['primary'])) {
             $primary_dark = $this->adjust_brightness($atts['primary'], -30);
             $custom_style .= " background: linear-gradient(135deg, {$atts['primary']} 0%, {$primary_dark} 100%);";
             $custom_style .= " box-shadow: 0 4px 15px " . $this->hex_to_rgba($atts['primary'], 0.3) . ";";
         }
 
+        // Custom size via shortcode attributes
+        if (!empty($atts['padding_y']) || !empty($atts['padding_x'])) {
+            $py = !empty($atts['padding_y']) ? intval($atts['padding_y']) : 16;
+            $px = !empty($atts['padding_x']) ? intval($atts['padding_x']) : 32;
+            $custom_style .= " padding: {$py}px {$px}px;";
+        }
+        // Custom size from settings (when size is 'custom')
+        elseif ($atts['size'] === 'custom') {
+            $py = intval($this->get_setting('button_padding_y', 16));
+            $px = intval($this->get_setting('button_padding_x', 32));
+            $custom_style .= " padding: {$py}px {$px}px;";
+        }
+
+        // Custom font size
+        if (!empty($atts['font_size'])) {
+            $custom_style .= " font-size: " . intval($atts['font_size']) . "px;";
+        } elseif ($atts['size'] === 'custom') {
+            $fs = intval($this->get_setting('button_font_size', 16));
+            $custom_style .= " font-size: {$fs}px;";
+        }
+
         return sprintf(
-            '<button type="button" class="ptf-popup-trigger %s" style="%s">%s</button>',
-            esc_attr($atts['class']),
+            '<button type="button" class="%s" style="%s">%s</button>',
+            esc_attr(trim($button_classes)),
             esc_attr(trim($custom_style)),
             esc_html($atts['text'])
         );

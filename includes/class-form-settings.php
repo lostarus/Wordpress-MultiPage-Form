@@ -74,6 +74,11 @@ class PTF_Form_Settings {
             'notification_email' => get_option('admin_email'),
             'primary_color' => '#2F7CFF',
             'secondary_color' => '#B7FF10',
+            'button_text_color' => '#ffffff',
+            'button_size' => 'medium',
+            'button_padding_y' => 16,
+            'button_padding_x' => 32,
+            'button_font_size' => 16,
             'button_text' => __('Get Quick Quote', 'pentest-quote-form'),
             'success_message' => __('Your quote request has been received successfully. Our expert team will contact you shortly.', 'pentest-quote-form'),
             'kvkk_url' => '/privacy-notice',
@@ -296,6 +301,20 @@ class PTF_Form_Settings {
 
         $sanitized['secondary_color'] = isset($input['secondary_color'])
             ? sanitize_hex_color($input['secondary_color']) : '#B7FF10';
+
+        $sanitized['button_text_color'] = isset($input['button_text_color'])
+            ? sanitize_hex_color($input['button_text_color']) : '#ffffff';
+
+        $sanitized['button_size'] = isset($input['button_size']) && in_array($input['button_size'], array('small', 'medium', 'large', 'xlarge', 'custom'))
+            ? $input['button_size'] : 'medium';
+
+        // Custom button size values
+        $sanitized['button_padding_y'] = isset($input['button_padding_y'])
+            ? max(4, min(60, intval($input['button_padding_y']))) : 16;
+        $sanitized['button_padding_x'] = isset($input['button_padding_x'])
+            ? max(8, min(100, intval($input['button_padding_x']))) : 32;
+        $sanitized['button_font_size'] = isset($input['button_font_size'])
+            ? max(10, min(32, intval($input['button_font_size']))) : 16;
 
         $sanitized['button_text'] = isset($input['button_text'])
             ? sanitize_text_field($input['button_text']) : __('Get Quick Quote', 'pentest-quote-form');
@@ -521,6 +540,75 @@ class PTF_Form_Settings {
                                            class="ptf-color-picker"
                                            data-default-color="#B7FF10">
                                     <p class="description"><?php esc_html_e('Used for success icons and highlight elements.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="button_text_color"><?php esc_html_e('Button Text Color', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="button_text_color"
+                                           name="ptf_settings[button_text_color]"
+                                           value="<?php echo esc_attr($settings['button_text_color']); ?>"
+                                           class="ptf-color-picker"
+                                           data-default-color="#ffffff">
+                                    <p class="description"><?php esc_html_e('Text color for the popup trigger button. Use contrasting color for better readability.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label for="button_size"><?php esc_html_e('Button Size', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <select id="button_size" name="ptf_settings[button_size]">
+                                        <option value="small" <?php selected($settings['button_size'], 'small'); ?>><?php esc_html_e('Small', 'pentest-quote-form'); ?></option>
+                                        <option value="medium" <?php selected($settings['button_size'], 'medium'); ?>><?php esc_html_e('Medium', 'pentest-quote-form'); ?></option>
+                                        <option value="large" <?php selected($settings['button_size'], 'large'); ?>><?php esc_html_e('Large', 'pentest-quote-form'); ?></option>
+                                        <option value="xlarge" <?php selected($settings['button_size'], 'xlarge'); ?>><?php esc_html_e('Extra Large', 'pentest-quote-form'); ?></option>
+                                        <option value="custom" <?php selected($settings['button_size'], 'custom'); ?>><?php esc_html_e('Custom (px)', 'pentest-quote-form'); ?></option>
+                                    </select>
+                                    <p class="description"><?php esc_html_e('Size of the popup trigger button.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr id="custom-button-size-row" style="<?php echo $settings['button_size'] === 'custom' ? '' : 'display:none;'; ?>">
+                                <th scope="row">
+                                    <label for="button_padding_y"><?php esc_html_e('Custom Button Padding', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                                        <div>
+                                            <label for="button_padding_y" style="font-weight: normal; font-size: 12px;"><?php esc_html_e('Vertical (px)', 'pentest-quote-form'); ?></label><br>
+                                            <input type="number"
+                                                   id="button_padding_y"
+                                                   name="ptf_settings[button_padding_y]"
+                                                   value="<?php echo esc_attr($settings['button_padding_y'] ?? 16); ?>"
+                                                   min="4"
+                                                   max="60"
+                                                   style="width: 80px;">
+                                        </div>
+                                        <div>
+                                            <label for="button_padding_x" style="font-weight: normal; font-size: 12px;"><?php esc_html_e('Horizontal (px)', 'pentest-quote-form'); ?></label><br>
+                                            <input type="number"
+                                                   id="button_padding_x"
+                                                   name="ptf_settings[button_padding_x]"
+                                                   value="<?php echo esc_attr($settings['button_padding_x'] ?? 32); ?>"
+                                                   min="8"
+                                                   max="100"
+                                                   style="width: 80px;">
+                                        </div>
+                                        <div>
+                                            <label for="button_font_size" style="font-weight: normal; font-size: 12px;"><?php esc_html_e('Font Size (px)', 'pentest-quote-form'); ?></label><br>
+                                            <input type="number"
+                                                   id="button_font_size"
+                                                   name="ptf_settings[button_font_size]"
+                                                   value="<?php echo esc_attr($settings['button_font_size'] ?? 16); ?>"
+                                                   min="10"
+                                                   max="32"
+                                                   style="width: 80px;">
+                                        </div>
+                                    </div>
+                                    <p class="description"><?php esc_html_e('Enter custom padding and font size values in pixels.', 'pentest-quote-form'); ?></p>
                                 </td>
                             </tr>
                         </table>
@@ -1261,13 +1349,46 @@ class PTF_Form_Settings {
             function updatePreview() {
                 var primary = $('#primary_color').val() || '#2F7CFF';
                 var secondary = $('#secondary_color').val() || '#B7FF10';
+                var buttonTextColor = $('#button_text_color').val() || '#ffffff';
+                var buttonSize = $('#button_size').val() || 'medium';
 
-                $('#preview-primary').css('background', 'linear-gradient(135deg, ' + primary + ' 0%, ' + adjustColor(primary, -20) + ' 100%)');
+                var sizeStyles = {
+                    'small': { padding: '12px 24px', fontSize: '14px' },
+                    'medium': { padding: '16px 32px', fontSize: '16px' },
+                    'large': { padding: '20px 40px', fontSize: '18px' },
+                    'xlarge': { padding: '24px 48px', fontSize: '20px' },
+                    'custom': {
+                        padding: ($('#button_padding_y').val() || 16) + 'px ' + ($('#button_padding_x').val() || 32) + 'px',
+                        fontSize: ($('#button_font_size').val() || 16) + 'px'
+                    }
+                };
+
+                $('#preview-primary').css({
+                    'background': 'linear-gradient(135deg, ' + primary + ' 0%, ' + adjustColor(primary, -20) + ' 100%)',
+                    'color': buttonTextColor,
+                    'padding': sizeStyles[buttonSize].padding,
+                    'fontSize': sizeStyles[buttonSize].fontSize
+                });
                 $('#preview-secondary').css({
                     'background': secondary,
                     'color': isLightColor(secondary) ? '#333' : '#fff'
                 });
             }
+
+            // Button size change event
+            $('#button_size').on('change', function() {
+                if ($(this).val() === 'custom') {
+                    $('#custom-button-size-row').show();
+                } else {
+                    $('#custom-button-size-row').hide();
+                }
+                updatePreview();
+            });
+
+            // Custom size input change events
+            $('#button_padding_y, #button_padding_x, #button_font_size').on('input', function() {
+                updatePreview();
+            });
 
             function adjustColor(color, amount) {
                 var usePound = false;

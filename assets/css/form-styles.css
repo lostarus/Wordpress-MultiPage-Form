@@ -869,12 +869,12 @@
 .ptf-popup-trigger {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     padding: 16px 32px;
     font-size: 16px;
     font-weight: 600;
     background: linear-gradient(135deg, #2F7CFF 0%, #1a5fd4 100%);
-    color: #fff;
+    color: var(--ptf-button-text, #fff);
     border: none !important;
     outline: none;
     border-radius: 50px;
@@ -883,19 +883,48 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+    transition: all 0.2s ease;
+}
+
+/* Button Sizes */
+.ptf-popup-trigger.ptf-btn-small {
+    padding: 12px 24px;
+    font-size: 14px;
+    gap: 8px;
+}
+
+.ptf-popup-trigger.ptf-btn-medium {
+    padding: 16px 32px;
+    font-size: 16px;
+    gap: 10px;
+}
+
+.ptf-popup-trigger.ptf-btn-large {
+    padding: 20px 40px;
+    font-size: 18px;
+    gap: 12px;
+}
+
+.ptf-popup-trigger.ptf-btn-xlarge {
+    padding: 24px 48px;
+    font-size: 20px;
+    gap: 14px;
 }
 
 .ptf-popup-trigger:hover {
     opacity: 0.9;
+    color: var(--ptf-button-text, #fff);
 }
 
 .ptf-popup-trigger:focus {
     outline: none;
     box-shadow: 0 4px 15px rgba(47, 124, 255, 0.3);
+    color: var(--ptf-button-text, #fff);
 }
 
 .ptf-popup-trigger:active {
     opacity: 0.85;
+    color: var(--ptf-button-text, #fff);
 }
 
 /* =========================================
