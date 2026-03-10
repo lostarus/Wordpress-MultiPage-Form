@@ -1336,21 +1336,51 @@ class PTF_Form_Settings {
 
         <script>
         jQuery(document).ready(function($) {
+            // Store current colors for live preview
+            var currentColors = {
+                primary: $('#primary_color').val() || '#2F7CFF',
+                secondary: $('#secondary_color').val() || '#B7FF10',
+                buttonText: $('#button_text_color').val() || '#ffffff'
+            };
+
             // Color picker başlat
-            $('.ptf-color-picker').wpColorPicker({
+            $('#primary_color').wpColorPicker({
                 change: function(event, ui) {
-                    // Delay to ensure value is updated in input
-                    setTimeout(updatePreview, 10);
+                    currentColors.primary = ui.color.toString();
+                    updatePreview();
                 },
                 clear: function() {
-                    setTimeout(updatePreview, 10);
+                    currentColors.primary = '#2F7CFF';
+                    updatePreview();
+                }
+            });
+
+            $('#secondary_color').wpColorPicker({
+                change: function(event, ui) {
+                    currentColors.secondary = ui.color.toString();
+                    updatePreview();
+                },
+                clear: function() {
+                    currentColors.secondary = '#B7FF10';
+                    updatePreview();
+                }
+            });
+
+            $('#button_text_color').wpColorPicker({
+                change: function(event, ui) {
+                    currentColors.buttonText = ui.color.toString();
+                    updatePreview();
+                },
+                clear: function() {
+                    currentColors.buttonText = '#ffffff';
+                    updatePreview();
                 }
             });
 
             function updatePreview() {
-                var primary = $('#primary_color').val() || '#2F7CFF';
-                var secondary = $('#secondary_color').val() || '#B7FF10';
-                var buttonTextColor = $('#button_text_color').val() || '#ffffff';
+                var primary = currentColors.primary;
+                var secondary = currentColors.secondary;
+                var buttonTextColor = currentColors.buttonText;
                 var buttonSize = $('#button_size').val() || 'medium';
 
                 var sizeStyles = {
