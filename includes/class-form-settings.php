@@ -88,6 +88,71 @@ class PTF_Form_Settings {
             // Webhook/API integrations
             'enable_webhooks' => '0',
             'webhooks' => array(),
+            // Static form field labels and placeholders
+            'field_labels' => array(
+                // Step names for progress bar
+                'step1' => array(
+                    'title' => __('Test Selection', 'pentest-quote-form'),
+                ),
+                'step2' => array(
+                    'title' => __('Test Details', 'pentest-quote-form'),
+                ),
+                'step3' => array(
+                    'title' => __('Contact Information', 'pentest-quote-form'),
+                ),
+                // Step 1 - Test Selection
+                'test_selection' => array(
+                    'title' => __('Test Type Selection', 'pentest-quote-form'),
+                    'description' => __('Which security test(s) would you like a quote for?', 'pentest-quote-form'),
+                    'multi_select_hint' => __('(You can select multiple)', 'pentest-quote-form'),
+                ),
+                // Step 2 - Test Details (dynamic questions step)
+                'test_details' => array(
+                    'title' => __('Test Details', 'pentest-quote-form'),
+                    'description' => __('Please provide details about the selected tests.', 'pentest-quote-form'),
+                ),
+                // Step 3 - Contact Information
+                'contact_step' => array(
+                    'title' => __('Contact Information', 'pentest-quote-form'),
+                    'description' => __('Please enter your information so we can contact you.', 'pentest-quote-form'),
+                ),
+                // Form fields
+                'company' => array(
+                    'label' => __('Company Name', 'pentest-quote-form'),
+                    'placeholder' => __('Company name', 'pentest-quote-form'),
+                ),
+                'first_name' => array(
+                    'label' => __('Contact Person', 'pentest-quote-form'),
+                    'placeholder' => __('Your Full Name', 'pentest-quote-form'),
+                ),
+                'email' => array(
+                    'label' => __('Email', 'pentest-quote-form'),
+                    'placeholder' => 'corporate@yourcompany.com',
+                    'hint' => __('Only corporate email addresses are accepted.', 'pentest-quote-form'),
+                ),
+                'phone' => array(
+                    'label' => __('Phone', 'pentest-quote-form'),
+                    'placeholder' => '+1 555 XXX XXXX',
+                ),
+                // Privacy consent
+                'kvkk_consent' => array(
+                    'text' => __("I have read, understood and accept the", 'pentest-quote-form'),
+                    'and_text' => __("and", 'pentest-quote-form'),
+                    'privacy_notice' => __('Privacy Notice', 'pentest-quote-form'),
+                    'privacy_policy' => __('Privacy Policy', 'pentest-quote-form'),
+                ),
+                // Buttons
+                'buttons' => array(
+                    'next' => __('Continue', 'pentest-quote-form'),
+                    'prev' => __('Back', 'pentest-quote-form'),
+                    'submit' => __('Submit', 'pentest-quote-form'),
+                ),
+                // Success & Loading messages
+                'messages' => array(
+                    'success_title' => __('Thank You!', 'pentest-quote-form'),
+                    'loading' => __('Sending...', 'pentest-quote-form'),
+                ),
+            ),
         );
     }
 
@@ -306,6 +371,26 @@ class PTF_Form_Settings {
             $sanitized['test_types'] = self::get_default_test_types();
         }
 
+        // Process field labels
+        $defaults = self::get_defaults();
+        $default_labels = $defaults['field_labels'];
+        $sanitized['field_labels'] = array();
+
+        if (isset($input['field_labels']) && is_array($input['field_labels'])) {
+            foreach ($default_labels as $field_key => $field_defaults) {
+                $sanitized['field_labels'][$field_key] = array();
+                foreach ($field_defaults as $prop => $default_value) {
+                    if (isset($input['field_labels'][$field_key][$prop])) {
+                        $sanitized['field_labels'][$field_key][$prop] = sanitize_text_field($input['field_labels'][$field_key][$prop]);
+                    } else {
+                        $sanitized['field_labels'][$field_key][$prop] = $default_value;
+                    }
+                }
+            }
+        } else {
+            $sanitized['field_labels'] = $default_labels;
+        }
+
         return $sanitized;
     }
 
@@ -478,6 +563,314 @@ class PTF_Form_Settings {
                                               rows="3"
                                               class="large-text"><?php echo esc_textarea($settings['success_message']); ?></textarea>
                                     <p class="description"><?php esc_html_e('Message displayed after form is successfully submitted.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Form Field Labels Settings -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-forms"></span> <?php esc_html_e('Form Labels & Texts', 'pentest-quote-form'); ?></h2>
+                        <p class="description" style="margin-bottom: 15px;">
+                            <?php esc_html_e('Customize all form labels, placeholders, button texts and step names.', 'pentest-quote-form'); ?>
+                        </p>
+                        <?php
+                        $field_labels = isset($settings['field_labels']) ? $settings['field_labels'] : array();
+                        $defaults = self::get_defaults();
+                        $default_labels = $defaults['field_labels'];
+                        ?>
+
+                        <!-- Progress Bar Step Names -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-editor-ol" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Progress Bar Step Names', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Step 1 Name', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][step1][title]"
+                                           value="<?php echo esc_attr($field_labels['step1']['title'] ?? $default_labels['step1']['title']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: Test Selection', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Step 2 Name', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][step2][title]"
+                                           value="<?php echo esc_attr($field_labels['step2']['title'] ?? $default_labels['step2']['title']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: Test Details', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Step 3 Name', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][step3][title]"
+                                           value="<?php echo esc_attr($field_labels['step3']['title'] ?? $default_labels['step3']['title']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: Contact Information', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Step 1 - Test Selection -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-yes-alt" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Step 1: Test Selection Page', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Page Title', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][test_selection][title]"
+                                           value="<?php echo esc_attr($field_labels['test_selection']['title'] ?? $default_labels['test_selection']['title']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Page Description', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][test_selection][description]"
+                                           value="<?php echo esc_attr($field_labels['test_selection']['description'] ?? $default_labels['test_selection']['description']); ?>"
+                                           class="large-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Multi-select Hint', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][test_selection][multi_select_hint]"
+                                           value="<?php echo esc_attr($field_labels['test_selection']['multi_select_hint'] ?? $default_labels['test_selection']['multi_select_hint']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: (You can select multiple)', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Step 2 - Test Details (if exists) -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-list-view" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Step 2: Test Details Page', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Page Title', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][test_details][title]"
+                                           value="<?php echo esc_attr($field_labels['test_details']['title'] ?? $default_labels['test_details']['title']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Page Description', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][test_details][description]"
+                                           value="<?php echo esc_attr($field_labels['test_details']['description'] ?? $default_labels['test_details']['description']); ?>"
+                                           class="large-text">
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Step 3 - Contact Information -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-id-alt" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Step 3: Contact Information Page', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Page Title', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][contact_step][title]"
+                                           value="<?php echo esc_attr($field_labels['contact_step']['title'] ?? $default_labels['contact_step']['title']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Page Description', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][contact_step][description]"
+                                           value="<?php echo esc_attr($field_labels['contact_step']['description'] ?? $default_labels['contact_step']['description']); ?>"
+                                           class="large-text">
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Form Fields -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-edit" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Form Field Labels & Placeholders', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Company - Label', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][company][label]"
+                                           value="<?php echo esc_attr($field_labels['company']['label'] ?? $default_labels['company']['label']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Company - Placeholder', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][company][placeholder]"
+                                           value="<?php echo esc_attr($field_labels['company']['placeholder'] ?? $default_labels['company']['placeholder']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Contact Person - Label', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][first_name][label]"
+                                           value="<?php echo esc_attr($field_labels['first_name']['label'] ?? $default_labels['first_name']['label']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Contact Person - Placeholder', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][first_name][placeholder]"
+                                           value="<?php echo esc_attr($field_labels['first_name']['placeholder'] ?? $default_labels['first_name']['placeholder']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Email - Label', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][email][label]"
+                                           value="<?php echo esc_attr($field_labels['email']['label'] ?? $default_labels['email']['label']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Email - Placeholder', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][email][placeholder]"
+                                           value="<?php echo esc_attr($field_labels['email']['placeholder'] ?? $default_labels['email']['placeholder']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Email - Hint Text', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][email][hint]"
+                                           value="<?php echo esc_attr($field_labels['email']['hint'] ?? $default_labels['email']['hint']); ?>"
+                                           class="large-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Phone - Label', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][phone][label]"
+                                           value="<?php echo esc_attr($field_labels['phone']['label'] ?? $default_labels['phone']['label']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Phone - Placeholder', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][phone][placeholder]"
+                                           value="<?php echo esc_attr($field_labels['phone']['placeholder'] ?? $default_labels['phone']['placeholder']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Privacy Consent -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-shield" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Privacy Consent Texts', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Consent Text Start', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][kvkk_consent][text]"
+                                           value="<?php echo esc_attr($field_labels['kvkk_consent']['text'] ?? $default_labels['kvkk_consent']['text']); ?>"
+                                           class="large-text">
+                                    <p class="description"><?php esc_html_e('Text before the first link', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Privacy Notice Link Text', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][kvkk_consent][privacy_notice]"
+                                           value="<?php echo esc_attr($field_labels['kvkk_consent']['privacy_notice'] ?? $default_labels['kvkk_consent']['privacy_notice']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('"And" Text', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][kvkk_consent][and_text]"
+                                           value="<?php echo esc_attr($field_labels['kvkk_consent']['and_text'] ?? $default_labels['kvkk_consent']['and_text']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Privacy Policy Link Text', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][kvkk_consent][privacy_policy]"
+                                           value="<?php echo esc_attr($field_labels['kvkk_consent']['privacy_policy'] ?? $default_labels['kvkk_consent']['privacy_policy']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Buttons -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-button" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Button Texts', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Next/Continue Button', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][buttons][next]"
+                                           value="<?php echo esc_attr($field_labels['buttons']['next'] ?? $default_labels['buttons']['next']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Back Button', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][buttons][prev]"
+                                           value="<?php echo esc_attr($field_labels['buttons']['prev'] ?? $default_labels['buttons']['prev']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Submit Button', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][buttons][submit]"
+                                           value="<?php echo esc_attr($field_labels['buttons']['submit'] ?? $default_labels['buttons']['submit']); ?>"
+                                           class="regular-text">
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Messages -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-megaphone" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Messages', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Success Title', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][messages][success_title]"
+                                           value="<?php echo esc_attr($field_labels['messages']['success_title'] ?? $default_labels['messages']['success_title']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: Thank You!', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Loading Text', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][messages][loading]"
+                                           value="<?php echo esc_attr($field_labels['messages']['loading'] ?? $default_labels['messages']['loading']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: Sending...', 'pentest-quote-form'); ?></p>
                                 </td>
                             </tr>
                         </table>

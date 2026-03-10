@@ -1375,6 +1375,80 @@ class PTF_Multi_Step_Form {
         $privacy_url = $this->get_setting('privacy_url', '/privacy-policy');
         $success_message = $this->get_setting('success_message', __('Your quote request has been received successfully. Our expert team will contact you shortly.', 'pentest-quote-form'));
 
+        // Get field labels from settings
+        $field_labels = $this->get_setting('field_labels', array());
+        $default_labels = array(
+            // Step names for progress bar
+            'step1' => array(
+                'title' => __('Test Selection', 'pentest-quote-form'),
+            ),
+            'step2' => array(
+                'title' => __('Test Details', 'pentest-quote-form'),
+            ),
+            'step3' => array(
+                'title' => __('Contact Information', 'pentest-quote-form'),
+            ),
+            // Step 1 - Test Selection
+            'test_selection' => array(
+                'title' => __('Test Type Selection', 'pentest-quote-form'),
+                'description' => __('Which security test(s) would you like a quote for?', 'pentest-quote-form'),
+                'multi_select_hint' => __('(You can select multiple)', 'pentest-quote-form'),
+            ),
+            // Step 2 - Test Details
+            'test_details' => array(
+                'title' => __('Test Details', 'pentest-quote-form'),
+                'description' => __('Please provide details about the selected tests.', 'pentest-quote-form'),
+            ),
+            // Step 3 - Contact Information
+            'contact_step' => array(
+                'title' => __('Contact Information', 'pentest-quote-form'),
+                'description' => __('Please enter your information so we can contact you.', 'pentest-quote-form'),
+            ),
+            // Form fields
+            'company' => array(
+                'label' => __('Company Name', 'pentest-quote-form'),
+                'placeholder' => __('Company name', 'pentest-quote-form'),
+            ),
+            'first_name' => array(
+                'label' => __('Contact Person', 'pentest-quote-form'),
+                'placeholder' => __('Your Full Name', 'pentest-quote-form'),
+            ),
+            'email' => array(
+                'label' => __('Email', 'pentest-quote-form'),
+                'placeholder' => 'corporate@yourcompany.com',
+                'hint' => __('Only corporate email addresses are accepted.', 'pentest-quote-form'),
+            ),
+            'phone' => array(
+                'label' => __('Phone', 'pentest-quote-form'),
+                'placeholder' => '+1 555 XXX XXXX',
+            ),
+            // Privacy consent
+            'kvkk_consent' => array(
+                'text' => __("I have read, understood and accept the", 'pentest-quote-form'),
+                'and_text' => __("and", 'pentest-quote-form'),
+                'privacy_notice' => __('Privacy Notice', 'pentest-quote-form'),
+                'privacy_policy' => __('Privacy Policy', 'pentest-quote-form'),
+            ),
+            // Buttons
+            'buttons' => array(
+                'next' => __('Continue', 'pentest-quote-form'),
+                'prev' => __('Back', 'pentest-quote-form'),
+                'submit' => __('Submit', 'pentest-quote-form'),
+            ),
+            // Success & Loading messages
+            'messages' => array(
+                'success_title' => __('Thank You!', 'pentest-quote-form'),
+                'loading' => __('Sending...', 'pentest-quote-form'),
+            ),
+        );
+        $field_labels = wp_parse_args($field_labels, $default_labels);
+        // Deep merge for nested arrays
+        foreach ($default_labels as $key => $value) {
+            if (is_array($value) && isset($field_labels[$key])) {
+                $field_labels[$key] = wp_parse_args($field_labels[$key], $value);
+            }
+        }
+
         // Dynamic categories and questions
         $categories = $this->get_categories();
 
@@ -1397,31 +1471,31 @@ class PTF_Multi_Step_Form {
             <div class="ptf-form-progress">
                 <div class="ptf-progress-step active" data-step="1">
                     <span class="step-number">1</span>
-                    <span class="step-label"><?php esc_html_e('Test Selection', 'pentest-quote-form'); ?></span>
+                    <span class="step-label"><?php echo esc_html($field_labels['step1']['title']); ?></span>
                 </div>
                 <?php if ($has_category_questions): ?>
                 <div class="ptf-progress-line"></div>
                 <div class="ptf-progress-step" data-step="2">
                     <span class="step-number">2</span>
-                    <span class="step-label"><?php esc_html_e('Test Details', 'pentest-quote-form'); ?></span>
+                    <span class="step-label"><?php echo esc_html($field_labels['step2']['title']); ?></span>
                 </div>
                 <?php endif; ?>
                 <div class="ptf-progress-line"></div>
                 <div class="ptf-progress-step" data-step="<?php echo $has_category_questions ? '3' : '2'; ?>">
                     <span class="step-number"><?php echo $has_category_questions ? '3' : '2'; ?></span>
-                    <span class="step-label"><?php esc_html_e('Contact Information', 'pentest-quote-form'); ?></span>
+                    <span class="step-label"><?php echo esc_html($field_labels['step3']['title']); ?></span>
                 </div>
             </div>
 
             <!-- Page 1 - Test Type Selection -->
             <div class="ptf-form-step active" data-step="1">
-                <h4 class="ptf-step-title"><?php esc_html_e('Test Type Selection', 'pentest-quote-form'); ?></h4>
-                <p class="ptf-step-description"><?php esc_html_e('Which security test(s) would you like a quote for?', 'pentest-quote-form'); ?></p>
+                <h4 class="ptf-step-title"><?php echo esc_html($field_labels['test_selection']['title']); ?></h4>
+                <p class="ptf-step-description"><?php echo esc_html($field_labels['test_selection']['description']); ?></p>
 
                 <div class="ptf-form-row">
                     <div class="ptf-form-group ptf-checkbox-group">
                         <label class="ptf-group-label">
-                            <span class="ptf-multi-select-hint"><?php esc_html_e('(You can select multiple)', 'pentest-quote-form'); ?></span>
+                            <span class="ptf-multi-select-hint"><?php echo esc_html($field_labels['test_selection']['multi_select_hint']); ?></span>
                             <span class="required">*</span>
                         </label>
                         <div class="ptf-checkbox-list">
@@ -1437,15 +1511,15 @@ class PTF_Multi_Step_Form {
                     </div>
                 </div>
                 <div class="ptf-form-actions">
-                    <button type="button" class="ptf-btn ptf-btn-next"><?php esc_html_e('Continue', 'pentest-quote-form'); ?> <span class="ptf-btn-arrow">→</span></button>
+                    <button type="button" class="ptf-btn ptf-btn-next"><?php echo esc_html($field_labels['buttons']['next']); ?> <span class="ptf-btn-arrow">→</span></button>
                 </div>
             </div>
 
             <!-- Page 2 - Test Details (Dynamic) - Only show if categories have questions -->
             <?php if ($has_category_questions): ?>
             <div class="ptf-form-step" data-step="2">
-                <h4 class="ptf-step-title"><?php esc_html_e('Test Details', 'pentest-quote-form'); ?></h4>
-                <p class="ptf-step-description"><?php esc_html_e('Enter detail information for your selected tests.', 'pentest-quote-form'); ?></p>
+                <h4 class="ptf-step-title"><?php echo esc_html($field_labels['test_details']['title']); ?></h4>
+                <p class="ptf-step-description"><?php echo esc_html($field_labels['test_details']['description']); ?></p>
 
                 <?php
                 // Dynamic category questions
@@ -1463,40 +1537,40 @@ class PTF_Multi_Step_Form {
 
 
                 <div class="ptf-form-actions ptf-form-actions-dual">
-                    <button type="button" class="ptf-btn ptf-btn-prev"><span class="ptf-btn-arrow">←</span> <?php esc_html_e('Back', 'pentest-quote-form'); ?></button>
-                    <button type="button" class="ptf-btn ptf-btn-next"><?php esc_html_e('Continue', 'pentest-quote-form'); ?> <span class="ptf-btn-arrow">→</span></button>
+                    <button type="button" class="ptf-btn ptf-btn-prev"><span class="ptf-btn-arrow">←</span> <?php echo esc_html($field_labels['buttons']['prev']); ?></button>
+                    <button type="button" class="ptf-btn ptf-btn-next"><?php echo esc_html($field_labels['buttons']['next']); ?> <span class="ptf-btn-arrow">→</span></button>
                 </div>
             </div>
             <?php endif; ?>
 
             <!-- Page 3 - Contact Information (or Page 2 if no category questions) -->
             <div class="ptf-form-step" data-step="<?php echo $has_category_questions ? '3' : '2'; ?>">
-                <h4 class="ptf-step-title"><?php esc_html_e('Contact Information', 'pentest-quote-form'); ?></h4>
-                <p class="ptf-step-description"><?php esc_html_e('Please enter your information so we can contact you.', 'pentest-quote-form'); ?></p>
+                <h4 class="ptf-step-title"><?php echo esc_html($field_labels['contact_step']['title']); ?></h4>
+                <p class="ptf-step-description"><?php echo esc_html($field_labels['contact_step']['description']); ?></p>
 
                 <div class="ptf-form-row ptf-form-row-2">
                     <div class="ptf-form-group">
-                        <label><?php esc_html_e('Company Name', 'pentest-quote-form'); ?> <span class="required">*</span></label>
-                        <input type="text" name="company" required placeholder="<?php esc_attr_e('Company name', 'pentest-quote-form'); ?>">
+                        <label><?php echo esc_html($field_labels['company']['label']); ?> <span class="required">*</span></label>
+                        <input type="text" name="company" required placeholder="<?php echo esc_attr($field_labels['company']['placeholder']); ?>">
                         <span class="ptf-field-error"></span>
                     </div>
                     <div class="ptf-form-group">
-                        <label><?php esc_html_e('Contact Person', 'pentest-quote-form'); ?> <span class="required">*</span></label>
-                        <input type="text" name="first_name" required placeholder="<?php esc_attr_e('Your Full Name', 'pentest-quote-form'); ?>">
+                        <label><?php echo esc_html($field_labels['first_name']['label']); ?> <span class="required">*</span></label>
+                        <input type="text" name="first_name" required placeholder="<?php echo esc_attr($field_labels['first_name']['placeholder']); ?>">
                         <span class="ptf-field-error"></span>
                     </div>
                 </div>
 
                 <div class="ptf-form-row ptf-form-row-2">
                     <div class="ptf-form-group">
-                        <label><?php esc_html_e('Email', 'pentest-quote-form'); ?> <span class="required">*</span></label>
-                        <input type="email" name="email" required placeholder="corporate@yourcompany.com" data-corporate-only="true">
+                        <label><?php echo esc_html($field_labels['email']['label']); ?> <span class="required">*</span></label>
+                        <input type="email" name="email" required placeholder="<?php echo esc_attr($field_labels['email']['placeholder']); ?>" data-corporate-only="true">
                         <span class="ptf-field-error"></span>
-                        <span class="ptf-field-hint"><?php esc_html_e('Only corporate email addresses are accepted.', 'pentest-quote-form'); ?></span>
+                        <span class="ptf-field-hint"><?php echo esc_html($field_labels['email']['hint']); ?></span>
                     </div>
                     <div class="ptf-form-group">
-                        <label><?php esc_html_e('Phone', 'pentest-quote-form'); ?> <span class="required">*</span></label>
-                        <input type="tel" name="phone" required placeholder="+1 555 XXX XXXX">
+                        <label><?php echo esc_html($field_labels['phone']['label']); ?> <span class="required">*</span></label>
+                        <input type="tel" name="phone" required placeholder="<?php echo esc_attr($field_labels['phone']['placeholder']); ?>">
                         <span class="ptf-field-error"></span>
                     </div>
                 </div>
@@ -1507,10 +1581,10 @@ class PTF_Multi_Step_Form {
                             <input type="checkbox" name="kvkk_consent" value="1" required>
                             <span class="ptf-checkbox-mark"></span>
                             <span class="ptf-consent-text">
-                                <?php esc_html_e("I have read, understood and accept the", 'pentest-quote-form'); ?>
-                                <a href="<?php echo esc_url($kvkk_url); ?>" target="_blank"><?php esc_html_e('Privacy Notice', 'pentest-quote-form'); ?></a>
-                                <?php esc_html_e("and", 'pentest-quote-form'); ?>
-                                <a href="<?php echo esc_url($privacy_url); ?>" target="_blank"><?php esc_html_e('Privacy Policy', 'pentest-quote-form'); ?></a>.
+                                <?php echo esc_html($field_labels['kvkk_consent']['text']); ?>
+                                <a href="<?php echo esc_url($kvkk_url); ?>" target="_blank"><?php echo esc_html($field_labels['kvkk_consent']['privacy_notice']); ?></a>
+                                <?php echo esc_html($field_labels['kvkk_consent']['and_text']); ?>
+                                <a href="<?php echo esc_url($privacy_url); ?>" target="_blank"><?php echo esc_html($field_labels['kvkk_consent']['privacy_policy']); ?></a>.
                             </span>
                         </label>
                         <span class="ptf-field-error" data-field="kvkk_consent"></span>
@@ -1518,8 +1592,8 @@ class PTF_Multi_Step_Form {
                 </div>
 
                 <div class="ptf-form-actions ptf-form-actions-dual">
-                    <button type="button" class="ptf-btn ptf-btn-prev"><span class="ptf-btn-arrow">←</span> <?php esc_html_e('Back', 'pentest-quote-form'); ?></button>
-                    <button type="submit" class="ptf-btn ptf-btn-submit" disabled><?php esc_html_e('Submit', 'pentest-quote-form'); ?></button>
+                    <button type="button" class="ptf-btn ptf-btn-prev"><span class="ptf-btn-arrow">←</span> <?php echo esc_html($field_labels['buttons']['prev']); ?></button>
+                    <button type="submit" class="ptf-btn ptf-btn-submit" disabled><?php echo esc_html($field_labels['buttons']['submit']); ?></button>
                 </div>
             </div>
 
@@ -1542,13 +1616,13 @@ class PTF_Multi_Step_Form {
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                     </svg>
                 </div>
-                <h3><?php esc_html_e('Thank You!', 'pentest-quote-form'); ?></h3>
+                <h3><?php echo esc_html($field_labels['messages']['success_title']); ?></h3>
                 <p><?php echo esc_html($success_message); ?></p>
             </div>
 
             <div class="ptf-form-loading" style="display: none;">
                 <div class="ptf-spinner"></div>
-                <p><?php esc_html_e('Sending...', 'pentest-quote-form'); ?></p>
+                <p><?php echo esc_html($field_labels['messages']['loading']); ?></p>
             </div>
         </form>
         <?php

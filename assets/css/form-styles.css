@@ -879,7 +879,6 @@
     outline: none;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(47, 124, 255, 0.3);
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -887,8 +886,7 @@
 }
 
 .ptf-popup-trigger:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(47, 124, 255, 0.4);
+    opacity: 0.9;
 }
 
 .ptf-popup-trigger:focus {
@@ -897,7 +895,7 @@
 }
 
 .ptf-popup-trigger:active {
-    transform: translateY(-1px);
+    opacity: 0.85;
 }
 
 /* =========================================
