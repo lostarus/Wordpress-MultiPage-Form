@@ -1339,10 +1339,11 @@ class PTF_Form_Settings {
             // Color picker başlat
             $('.ptf-color-picker').wpColorPicker({
                 change: function(event, ui) {
-                    updatePreview();
+                    // Delay to ensure value is updated in input
+                    setTimeout(updatePreview, 10);
                 },
                 clear: function() {
-                    updatePreview();
+                    setTimeout(updatePreview, 10);
                 }
             });
 

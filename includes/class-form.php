@@ -252,10 +252,12 @@ class PTF_Multi_Step_Form {
         .ptf-btn-next,
         .ptf-btn-submit {
             background: linear-gradient(135deg, {$primary} 0%, {$primary_dark} 100%);
+            color: {$button_text_color};
         }
         .ptf-btn-next:hover,
         .ptf-btn-submit:hover:not(:disabled) {
             box-shadow: 0 4px 15px " . $this->hex_to_rgba($primary, 0.4) . ";
+            color: {$button_text_color};
         }
         .ptf-popup-trigger {
             background: linear-gradient(135deg, {$primary} 0%, {$primary_dark} 100%);

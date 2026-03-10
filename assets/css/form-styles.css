@@ -763,7 +763,7 @@
 .ptf-btn-next,
 .ptf-btn-submit {
     background: linear-gradient(135deg, #2F7CFF 0%, #1a5fd4 100%);
-    color: #fff;
+    color: var(--ptf-button-text, #fff);
 }
 
 .ptf-btn-next:hover,
