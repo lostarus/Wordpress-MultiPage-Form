@@ -120,7 +120,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
 
 ## 👨‍💻 Author
 
-**mustafaer** - [GitHub](https://github.com/lostarus)
+**mustafaer** - [GitHub](https://github.com/mustafaer)
 
 ---
 
