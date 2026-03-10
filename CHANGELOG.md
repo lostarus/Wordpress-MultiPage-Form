@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-10
+
+### Added
+- **Button Text Color**: New color picker to customize text color for all primary buttons
+- **Button Size Presets**: Choose from Small, Medium, Large, or Extra Large button sizes
+- **Custom Button Size**: Define exact pixel values for padding (vertical/horizontal) and font size
+- **Live Preview**: All color and size settings now update instantly in the admin preview
+- **Enhanced Button Styling**: Button text color now applies to Next, Submit, and Popup trigger buttons
+
+### Improved
+- **reCAPTCHA Error Handling**: Better error catching with user-friendly messages instead of silent failures
+- **Admin Settings Preview**: Color picker changes now reflect immediately without saving
+- **Documentation**: Updated with comprehensive button customization guide
+
+### Fixed
+- Form no longer gets stuck on "Sending..." when reCAPTCHA fails
+- Button text color preview now updates in real-time
+
 ## [1.1.0] - 2026-03-10
 
 ### Added
@@ -49,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Capability checks for admin functions
 - Prepared SQL statements for database queries
 
+[1.2.0]: https://github.com/lostarus/Wordpress-MultiPage-Form/releases/tag/v1.2.0
 [1.1.0]: https://github.com/lostarus/Wordpress-MultiPage-Form/releases/tag/v1.1.0
 [1.0.0]: https://github.com/lostarus/Wordpress-MultiPage-Form/releases/tag/v1.0.0
 

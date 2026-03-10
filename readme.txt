@@ -4,7 +4,7 @@ Tags: form, quote, cybersecurity, multi-step form, popup form, pentest
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,6 +33,16 @@ Pentest Quote Form is a professional WordPress plugin specially designed for cyb
 3. Configure from the settings page
 
 == Changelog ==
+
+= 1.2.0 =
+* Added: Button text color customization option
+* Added: Button size settings (Small, Medium, Large, Extra Large, Custom)
+* Added: Custom button size with pixel values (padding and font size)
+* Added: Live preview for all color and size settings in admin panel
+* Added: Button styling applied to Next, Submit, and Popup trigger buttons
+* Improved: reCAPTCHA error handling with user-friendly messages
+* Improved: Admin settings preview now updates instantly for all options
+* Updated: Documentation with new button customization features
 
 = 1.1.0 =
 * Added: Fully customizable form labels and texts from Settings panel
