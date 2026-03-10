@@ -4,7 +4,7 @@ Tags: form, quote, cybersecurity, multi-step form, popup form, pentest
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,6 +23,7 @@ Pentest Quote Form is a professional WordPress plugin specially designed for cyb
 * Webhook/API integrations
 * Corporate email filter
 * GDPR-compliant consent mechanism
+* Fully customizable form labels and texts
 * CSV export feature
 
 == Installation ==
@@ -32,6 +33,19 @@ Pentest Quote Form is a professional WordPress plugin specially designed for cyb
 3. Configure from the settings page
 
 == Changelog ==
+
+= 1.1.0 =
+* Added: Fully customizable form labels and texts from Settings panel
+* Added: Progress bar step names customization
+* Added: Page titles and descriptions customization for each step
+* Added: Form field labels and placeholders customization
+* Added: Button texts customization (Continue, Back, Submit)
+* Added: Privacy consent texts customization
+* Added: Success and loading messages customization
+* Added: Comprehensive documentation (DOCUMENTATION.md)
+* Changed: Removed hover animations from popup trigger button
+* Changed: Improved settings panel organization
+* Fixed: Field labels now properly fall back to defaults
 
 = 1.0.0 =
 * Initial public release
