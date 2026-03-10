@@ -352,17 +352,33 @@
 
             // If reCAPTCHA is enabled, get token
             if (ptfForm.recaptcha && ptfForm.recaptcha.enabled && typeof grecaptcha !== 'undefined') {
-                grecaptcha.ready(() => {
-                    grecaptcha.execute(ptfForm.recaptcha.siteKey, {action: 'submit_quote_form'})
-                        .then((token) => {
-                            this.sendFormData(token);
-                        })
-                        .catch((error) => {
-                            console.error('reCAPTCHA error:', error);
-                            // Try to submit form even if reCAPTCHA fails
-                            this.sendFormData('');
-                        });
-                });
+                try {
+                    grecaptcha.ready(() => {
+                        try {
+                            grecaptcha.execute(ptfForm.recaptcha.siteKey, {action: 'submit_quote_form'})
+                                .then((token) => {
+                                    this.sendFormData(token);
+                                })
+                                .catch((error) => {
+                                    console.error('reCAPTCHA error:', error);
+                                    // Show error to user instead of silent fail
+                                    this.isSubmitting = false;
+                                    this.showLoading(false);
+                                    this.showError(ptfForm.messages.recaptcha_error || 'reCAPTCHA verification failed. Please try again.');
+                                });
+                        } catch (error) {
+                            console.error('reCAPTCHA execute error:', error);
+                            this.isSubmitting = false;
+                            this.showLoading(false);
+                            this.showError(ptfForm.messages.recaptcha_error || 'reCAPTCHA verification failed. Please check site configuration.');
+                        }
+                    });
+                } catch (error) {
+                    console.error('reCAPTCHA ready error:', error);
+                    this.isSubmitting = false;
+                    this.showLoading(false);
+                    this.showError(ptfForm.messages.recaptcha_error || 'reCAPTCHA failed to initialize.');
+                }
             } else {
                 // Submit directly if no reCAPTCHA
                 this.sendFormData('');
