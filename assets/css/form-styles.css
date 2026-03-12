@@ -757,7 +757,6 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.3s ease;
 }
 
 .ptf-btn-next,
@@ -768,8 +767,7 @@
 
 .ptf-btn-next:hover,
 .ptf-btn-submit:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(47, 124, 255, 0.4);
+    opacity: 0.9;
 }
 
 .ptf-btn-prev {
@@ -852,7 +850,6 @@
     line-height: 1;
     color: #6b7280;
     cursor: pointer;
-    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -883,7 +880,6 @@
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    transition: all 0.2s ease;
 }
 
 /* Button Sizes */

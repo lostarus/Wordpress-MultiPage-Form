@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - **Yes/No Answer Type**: Removed redundant yes_no question type - use Dropdown with Yes/No options instead
+- **Button Animations**: Removed all hover animations (transform, shadow) from buttons for cleaner UX
 
 ### Fixed
 - Form no longer gets stuck on "Sending..." when reCAPTCHA fails
