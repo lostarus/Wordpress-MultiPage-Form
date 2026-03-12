@@ -75,6 +75,24 @@
             // Data storage checkboxes
             $('input[name="ptf_settings[save_to_database]"], input[name="ptf_settings[send_email_notification]"]')
                 .on('change', this.checkDataStorageWarning.bind(this));
+
+            // Button size toggle
+            $('#button_size').on('change', function() {
+                if ($(this).val() === 'custom') {
+                    $('#custom-button-size-row').show();
+                } else {
+                    $('#custom-button-size-row').hide();
+                }
+            });
+
+            // Font family toggle
+            $('#font_family').on('change', function() {
+                if ($(this).val() === 'custom') {
+                    $('#custom-font-row').show();
+                } else {
+                    $('#custom-font-row').hide();
+                }
+            });
         }
 
         /**

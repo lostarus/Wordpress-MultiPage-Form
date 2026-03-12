@@ -80,6 +80,12 @@ class PTF_Form_Settings {
             'button_padding_x' => 32,
             'button_font_size' => 16,
             'button_text' => __('Get Quick Quote', 'pentest-quote-form'),
+            // Font settings
+            'font_family' => 'inherit',
+            'font_family_custom' => '',
+            'heading_font_size' => 26,
+            'body_font_size' => 15,
+            'label_font_size' => 14,
             'success_message' => __('Your quote request has been received successfully. Our expert team will contact you shortly.', 'pentest-quote-form'),
             'kvkk_url' => '/privacy-notice',
             'privacy_url' => '/privacy-policy',
@@ -331,6 +337,19 @@ class PTF_Form_Settings {
             ? max(8, min(100, intval($input['button_padding_x']))) : 32;
         $sanitized['button_font_size'] = isset($input['button_font_size'])
             ? max(10, min(32, intval($input['button_font_size']))) : 16;
+
+        // Font settings
+        $allowed_fonts = array('inherit', 'system', 'inter', 'roboto', 'opensans', 'lato', 'poppins', 'montserrat', 'nunito', 'custom');
+        $sanitized['font_family'] = isset($input['font_family']) && in_array($input['font_family'], $allowed_fonts)
+            ? $input['font_family'] : 'inherit';
+        $sanitized['font_family_custom'] = isset($input['font_family_custom'])
+            ? sanitize_text_field($input['font_family_custom']) : '';
+        $sanitized['heading_font_size'] = isset($input['heading_font_size'])
+            ? max(14, min(48, intval($input['heading_font_size']))) : 26;
+        $sanitized['body_font_size'] = isset($input['body_font_size'])
+            ? max(10, min(24, intval($input['body_font_size']))) : 15;
+        $sanitized['label_font_size'] = isset($input['label_font_size'])
+            ? max(10, min(20, intval($input['label_font_size']))) : 14;
 
         $sanitized['button_text'] = isset($input['button_text'])
             ? sanitize_text_field($input['button_text']) : __('Get Quick Quote', 'pentest-quote-form');
@@ -625,6 +644,88 @@ class PTF_Form_Settings {
                                         </div>
                                     </div>
                                     <p class="description"><?php esc_html_e('Enter custom padding and font size values in pixels.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Typography Settings -->
+                        <h4 style="margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #2F7CFF; padding-bottom: 8px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-editor-textcolor" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Typography', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row">
+                                    <label for="font_family"><?php esc_html_e('Font Family', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <select id="font_family" name="ptf_settings[font_family]">
+                                        <option value="inherit" <?php selected($settings['font_family'] ?? 'inherit', 'inherit'); ?>><?php esc_html_e('Inherit from theme', 'pentest-quote-form'); ?></option>
+                                        <option value="system" <?php selected($settings['font_family'] ?? 'inherit', 'system'); ?>>System UI (San Francisco, Segoe UI)</option>
+                                        <option value="inter" <?php selected($settings['font_family'] ?? 'inherit', 'inter'); ?>>Inter</option>
+                                        <option value="roboto" <?php selected($settings['font_family'] ?? 'inherit', 'roboto'); ?>>Roboto</option>
+                                        <option value="opensans" <?php selected($settings['font_family'] ?? 'inherit', 'opensans'); ?>>Open Sans</option>
+                                        <option value="lato" <?php selected($settings['font_family'] ?? 'inherit', 'lato'); ?>>Lato</option>
+                                        <option value="poppins" <?php selected($settings['font_family'] ?? 'inherit', 'poppins'); ?>>Poppins</option>
+                                        <option value="montserrat" <?php selected($settings['font_family'] ?? 'inherit', 'montserrat'); ?>>Montserrat</option>
+                                        <option value="nunito" <?php selected($settings['font_family'] ?? 'inherit', 'nunito'); ?>>Nunito</option>
+                                        <option value="custom" <?php selected($settings['font_family'] ?? 'inherit', 'custom'); ?>><?php esc_html_e('Custom', 'pentest-quote-form'); ?></option>
+                                    </select>
+                                    <p class="description"><?php esc_html_e('Select a font family for the form. Google Fonts will be loaded automatically.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr id="custom-font-row" style="<?php echo ($settings['font_family'] ?? 'inherit') === 'custom' ? '' : 'display:none;'; ?>">
+                                <th scope="row">
+                                    <label for="font_family_custom"><?php esc_html_e('Custom Font Family', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <input type="text"
+                                           id="font_family_custom"
+                                           name="ptf_settings[font_family_custom]"
+                                           value="<?php echo esc_attr($settings['font_family_custom'] ?? ''); ?>"
+                                           class="regular-text"
+                                           placeholder="'Your Font', sans-serif">
+                                    <p class="description"><?php esc_html_e('Enter custom font-family CSS value. Make sure the font is loaded on your site.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    <label><?php esc_html_e('Font Sizes (px)', 'pentest-quote-form'); ?></label>
+                                </th>
+                                <td>
+                                    <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                                        <div>
+                                            <label for="heading_font_size" style="font-weight: normal; font-size: 12px; display: block; margin-bottom: 4px;"><?php esc_html_e('Headings', 'pentest-quote-form'); ?></label>
+                                            <input type="number"
+                                                   id="heading_font_size"
+                                                   name="ptf_settings[heading_font_size]"
+                                                   value="<?php echo esc_attr($settings['heading_font_size'] ?? 26); ?>"
+                                                   min="14"
+                                                   max="48"
+                                                   style="width: 80px;">
+                                        </div>
+                                        <div>
+                                            <label for="body_font_size" style="font-weight: normal; font-size: 12px; display: block; margin-bottom: 4px;"><?php esc_html_e('Body Text', 'pentest-quote-form'); ?></label>
+                                            <input type="number"
+                                                   id="body_font_size"
+                                                   name="ptf_settings[body_font_size]"
+                                                   value="<?php echo esc_attr($settings['body_font_size'] ?? 15); ?>"
+                                                   min="10"
+                                                   max="24"
+                                                   style="width: 80px;">
+                                        </div>
+                                        <div>
+                                            <label for="label_font_size" style="font-weight: normal; font-size: 12px; display: block; margin-bottom: 4px;"><?php esc_html_e('Labels', 'pentest-quote-form'); ?></label>
+                                            <input type="number"
+                                                   id="label_font_size"
+                                                   name="ptf_settings[label_font_size]"
+                                                   value="<?php echo esc_attr($settings['label_font_size'] ?? 14); ?>"
+                                                   min="10"
+                                                   max="20"
+                                                   style="width: 80px;">
+                                        </div>
+                                    </div>
+                                    <p class="description"><?php esc_html_e('Customize font sizes for different elements.', 'pentest-quote-form'); ?></p>
                                 </td>
                             </tr>
                         </table>

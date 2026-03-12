@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhanced Button Styling**: Button text color now applies to Next, Submit, and Popup trigger buttons
 - **Form Header Customization**: Customize the form title ("Get Quick Quote") and subtitle from Settings > Form Labels
 - **Validation Messages Customization**: All validation error messages are now customizable (required, email, phone, etc.)
+- **Typography Settings**: Customize font family (8 Google Fonts + system + custom) and font sizes for headings, body text, and labels
+- **Radio & Checkbox Styling**: Proper inline styling for radio buttons and checkbox question types
 
 ### Improved
 - **reCAPTCHA Error Handling**: Better error catching with user-friendly messages instead of silent failures

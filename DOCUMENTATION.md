@@ -222,6 +222,33 @@ When you select "Custom (px)" for Button Size, additional fields appear:
 | **Horizontal Padding** | 8-100 px | 32 | Left and right padding |
 | **Font Size** | 10-32 px | 16 | Button text size |
 
+### Typography Settings
+
+Customize fonts for the entire form from **Settings → Color Settings → Typography**.
+
+#### Font Family Options
+
+| Font | Description |
+|------|-------------|
+| **Inherit from theme** | Uses your theme's default font |
+| **System UI** | San Francisco (Mac), Segoe UI (Windows), etc. |
+| **Inter** | Modern, highly readable sans-serif (Google Font) |
+| **Roboto** | Clean, mechanical sans-serif (Google Font) |
+| **Open Sans** | Humanist sans-serif, excellent readability (Google Font) |
+| **Lato** | Warm, friendly sans-serif (Google Font) |
+| **Poppins** | Geometric sans-serif (Google Font) |
+| **Montserrat** | Urban, elegant sans-serif (Google Font) |
+| **Nunito** | Rounded, friendly sans-serif (Google Font) |
+| **Custom** | Enter your own font-family CSS value |
+
+#### Font Sizes
+
+| Element | Range | Default | Description |
+|---------|-------|---------|-------------|
+| **Headings** | 14-48 px | 26 | Form title, popup title |
+| **Body Text** | 10-24 px | 15 | Input fields, descriptions, labels |
+| **Labels** | 10-20 px | 14 | Form field labels |
+
 ### Text Settings
 
 | Setting | Description |

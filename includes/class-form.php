@@ -138,11 +138,33 @@ class PTF_Multi_Step_Form {
             PTF_VERSION
         );
 
-        // Dynamic colors inline CSS
+        // Load Google Fonts if needed
+        $font_family = $this->get_setting('font_family', 'inherit');
+        $google_fonts = array(
+            'inter' => 'Inter:wght@400;500;600;700',
+            'roboto' => 'Roboto:wght@400;500;700',
+            'opensans' => 'Open+Sans:wght@400;500;600;700',
+            'lato' => 'Lato:wght@400;700',
+            'poppins' => 'Poppins:wght@400;500;600;700',
+            'montserrat' => 'Montserrat:wght@400;500;600;700',
+            'nunito' => 'Nunito:wght@400;500;600;700',
+        );
+
+        if (isset($google_fonts[$font_family])) {
+            wp_enqueue_style(
+                'ptf-google-fonts',
+                'https://fonts.googleapis.com/css2?family=' . $google_fonts[$font_family] . '&display=swap',
+                array(),
+                null
+            );
+        }
+
+        // Dynamic colors and fonts inline CSS
         $primary = $this->get_setting('primary_color', '#2F7CFF');
         $secondary = $this->get_setting('secondary_color', '#B7FF10');
         $button_text_color = $this->get_setting('button_text_color', '#ffffff');
         $custom_css = $this->generate_color_css($primary, $secondary, $button_text_color);
+        $custom_css .= $this->generate_font_css();
         wp_add_inline_style('ptf-multistep-form', $custom_css);
 
         // reCAPTCHA
@@ -283,6 +305,89 @@ class PTF_Multi_Step_Form {
             color: {$secondary};
         }
         ";
+    }
+
+    /**
+     * Generate dynamic font CSS
+     */
+    private function generate_font_css() {
+        $font_family = $this->get_setting('font_family', 'inherit');
+        $font_family_custom = $this->get_setting('font_family_custom', '');
+        $heading_size = intval($this->get_setting('heading_font_size', 26));
+        $body_size = intval($this->get_setting('body_font_size', 15));
+        $label_size = intval($this->get_setting('label_font_size', 14));
+
+        // Determine font-family value
+        $font_stack = 'inherit';
+        switch ($font_family) {
+            case 'system':
+                $font_stack = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif";
+                break;
+            case 'inter':
+                $font_stack = "'Inter', sans-serif";
+                break;
+            case 'roboto':
+                $font_stack = "'Roboto', sans-serif";
+                break;
+            case 'opensans':
+                $font_stack = "'Open Sans', sans-serif";
+                break;
+            case 'lato':
+                $font_stack = "'Lato', sans-serif";
+                break;
+            case 'poppins':
+                $font_stack = "'Poppins', sans-serif";
+                break;
+            case 'montserrat':
+                $font_stack = "'Montserrat', sans-serif";
+                break;
+            case 'nunito':
+                $font_stack = "'Nunito', sans-serif";
+                break;
+            case 'custom':
+                $font_stack = !empty($font_family_custom) ? $font_family_custom : 'inherit';
+                break;
+            default:
+                $font_stack = 'inherit';
+        }
+
+        $css = "";
+
+        // Only add font-family if not inherit
+        if ($font_stack !== 'inherit') {
+            $css .= "
+        .ptf-form-wrapper,
+        .ptf-popup-container,
+        .ptf-popup-trigger {
+            font-family: {$font_stack};
+        }
+        ";
+        }
+
+        // Font sizes
+        $css .= "
+        .ptf-popup-title,
+        .ptf-form-title {
+            font-size: {$heading_size}px;
+        }
+        .ptf-step-title {
+            font-size: " . round($heading_size * 0.77) . "px;
+        }
+        .ptf-form-group input,
+        .ptf-form-group select,
+        .ptf-form-group textarea,
+        .ptf-checkbox-label,
+        .ptf-consent-text,
+        .ptf-step-description {
+            font-size: {$body_size}px;
+        }
+        .ptf-form-group label,
+        .ptf-group-label {
+            font-size: {$label_size}px;
+        }
+        ";
+
+        return $css;
     }
 
     private function adjust_brightness($hex, $steps) {
