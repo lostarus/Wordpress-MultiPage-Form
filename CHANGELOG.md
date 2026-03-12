@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-12
+
+### Added
+- **Typography Settings**: Customize font family (8 Google Fonts + system + custom) and font sizes for headings, body text, and labels
+- **Form Header Customization**: Customize the form title and subtitle from Settings > Form Labels
+- **Validation Messages Customization**: All validation error messages are now customizable (required, email, phone, etc.)
+- **Radio & Checkbox Styling**: Proper inline styling for radio buttons and checkbox question types
+
+### Removed
+- **Yes/No Answer Type**: Removed redundant yes_no question type - use Dropdown with Yes/No options instead
+- **Button Animations**: Removed all hover animations (transform, shadow) from buttons for cleaner UX
+
 ## [1.2.0] - 2026-03-12
 
 ### Added
@@ -13,19 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Custom Button Size**: Define exact pixel values for padding (vertical/horizontal) and font size
 - **Live Preview**: All color and size settings now update instantly in the admin preview
 - **Enhanced Button Styling**: Button text color now applies to Next, Submit, and Popup trigger buttons
-- **Form Header Customization**: Customize the form title ("Get Quick Quote") and subtitle from Settings > Form Labels
-- **Validation Messages Customization**: All validation error messages are now customizable (required, email, phone, etc.)
-- **Typography Settings**: Customize font family (8 Google Fonts + system + custom) and font sizes for headings, body text, and labels
-- **Radio & Checkbox Styling**: Proper inline styling for radio buttons and checkbox question types
 
 ### Improved
 - **reCAPTCHA Error Handling**: Better error catching with user-friendly messages instead of silent failures
 - **Admin Settings Preview**: Color picker changes now reflect immediately without saving
 - **Documentation**: Updated with comprehensive button customization guide
 
-### Removed
-- **Yes/No Answer Type**: Removed redundant yes_no question type - use Dropdown with Yes/No options instead
-- **Button Animations**: Removed all hover animations (transform, shadow) from buttons for cleaner UX
 
 ### Fixed
 - Form no longer gets stuck on "Sending..." when reCAPTCHA fails
