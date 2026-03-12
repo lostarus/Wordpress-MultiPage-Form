@@ -263,11 +263,12 @@ Add custom questions to each category:
 | **text** | Single line text | Short answers |
 | **textarea** | Multi-line text | Long descriptions |
 | **number** | Numeric value | Quantities, counts |
-| **select** | Dropdown list | Single selection |
-| **radio** | Radio buttons | Single selection (visible) |
+| **select** | Dropdown list | Single selection from options |
+| **radio** | Radio buttons | Single selection (visible options) |
 | **checkbox** | Checkboxes | Multiple selection |
-| **yes_no** | Yes/No | Binary choice |
+| **date** | Date picker | Date selection |
 | **email** | Email | Email format validation |
+| **tel** | Phone | Phone number input |
 
 3. Enter question details:
    - **Question Text:** Text displayed to user

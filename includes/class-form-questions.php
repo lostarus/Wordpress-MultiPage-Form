@@ -145,7 +145,6 @@ class PTF_Form_Questions {
             'select' => __('Dropdown', 'pentest-quote-form'),
             'radio' => __('Single Select (Radio)', 'pentest-quote-form'),
             'checkbox' => __('Multiple Select (Checkbox)', 'pentest-quote-form'),
-            'yes_no' => __('Yes / No', 'pentest-quote-form'),
             'date' => __('Date', 'pentest-quote-form'),
             'email' => __('Email', 'pentest-quote-form'),
             'tel' => __('Phone', 'pentest-quote-form'),
@@ -184,10 +183,13 @@ class PTF_Form_Questions {
                         array(
                             'id' => 'has_auth',
                             'question' => 'Are there pages requiring authentication?',
-                            'type' => 'yes_no',
+                            'type' => 'select',
                             'required' => false,
                             'placeholder' => '',
-                            'options' => array(),
+                            'options' => array(
+                                array('id' => 'yes', 'label' => 'Yes'),
+                                array('id' => 'no', 'label' => 'No'),
+                            ),
                             'order' => 1,
                         ),
                     ),

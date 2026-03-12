@@ -179,8 +179,12 @@
                             {
                                 id: 'has_auth',
                                 question: 'Are there pages requiring authentication?',
-                                type: 'yes_no',
-                                required: false
+                                type: 'select',
+                                required: false,
+                                options: [
+                                    { id: 'yes', label: 'Yes' },
+                                    { id: 'no', label: 'No' }
+                                ]
                             },
                             {
                                 id: 'user_roles',
@@ -660,7 +664,6 @@
                                     <option value="select">${i18n.typeSelect || 'Dropdown'}</option>
                                     <option value="radio">${i18n.typeRadio || 'Single Select'}</option>
                                     <option value="checkbox">${i18n.typeCheckbox || 'Multiple Select'}</option>
-                                    <option value="yes_no">${i18n.typeYesNo || 'Yes / No'}</option>
                                 </select>
                             </div>
                             <div class="detail-row">
@@ -740,7 +743,6 @@
                                     <option value="select" ${q.type === 'select' ? 'selected' : ''}>${i18n.typeSelect || 'Dropdown'}</option>
                                     <option value="radio" ${q.type === 'radio' ? 'selected' : ''}>${i18n.typeRadio || 'Single Select'}</option>
                                     <option value="checkbox" ${q.type === 'checkbox' ? 'selected' : ''}>${i18n.typeCheckbox || 'Multiple Select'}</option>
-                                    <option value="yes_no" ${q.type === 'yes_no' ? 'selected' : ''}>${i18n.typeYesNo || 'Yes / No'}</option>
                                 </select>
                             </div>
                             <div class="detail-row">

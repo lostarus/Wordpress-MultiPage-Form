@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin Settings Preview**: Color picker changes now reflect immediately without saving
 - **Documentation**: Updated with comprehensive button customization guide
 
+### Removed
+- **Yes/No Answer Type**: Removed redundant yes_no question type - use Dropdown with Yes/No options instead
+
 ### Fixed
 - Form no longer gets stuck on "Sending..." when reCAPTCHA fails
 - Button text color preview now updates in real-time

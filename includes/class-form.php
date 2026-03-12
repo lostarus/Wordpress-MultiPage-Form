@@ -585,10 +585,7 @@ class PTF_Multi_Step_Form {
                                 }
                             }
                         }
-                        // Translate for yes_no
-                        if ($question['type'] === 'yes_no') {
-                            $value = $value === 'evet' ? 'Yes' : ($value === 'hayir' ? 'No' : ucfirst($value));
-                        }
+
 
                         $details[] = $question['question'] . ": " . $value;
                     }
@@ -851,10 +848,6 @@ class PTF_Multi_Step_Form {
                         }
                     }
 
-                    // yes_no label
-                    if ($question['type'] === 'yes_no') {
-                        $answer_label = ($answer === 'evet') ? 'Yes' : (($answer === 'hayir') ? 'No' : $answer);
-                    }
 
                     $category_data['questions'][] = array(
                         'id' => $qid,
@@ -1758,16 +1751,6 @@ class PTF_Multi_Step_Form {
                         <?php foreach ($options as $opt): ?>
                         <option value="<?php echo esc_attr($opt['id']); ?>"><?php echo esc_html($opt['label']); ?></option>
                         <?php endforeach; ?>
-                    </select>
-                    <?php
-                    break;
-
-                case 'yes_no':
-                    ?>
-                    <select name="<?php echo esc_attr($key); ?>" <?php echo $required ? 'required' : ''; ?>>
-                        <option value=""><?php esc_html_e('Select', 'pentest-quote-form'); ?></option>
-                        <option value="evet"><?php esc_html_e('Yes', 'pentest-quote-form'); ?></option>
-                        <option value="hayir"><?php esc_html_e('No', 'pentest-quote-form'); ?></option>
                     </select>
                     <?php
                     break;
