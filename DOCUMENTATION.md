@@ -294,6 +294,13 @@ Format: `Display Text|value`
 
 Customize all form texts from **Settings → Form Labels & Texts**.
 
+### Form Header
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| **Form Title** | Get Quick Quote | Main title shown at the top of the form |
+| **Form Subtitle** | Get a quote for your cybersecurity needs | Subtitle/description below the title |
+
 ### Progress Bar Step Names
 
 | Field | Default | Description |

@@ -95,6 +95,11 @@ class PTF_Form_Settings {
             'webhooks' => array(),
             // Static form field labels and placeholders
             'field_labels' => array(
+                // Form header (title and subtitle)
+                'form_header' => array(
+                    'title' => __('Get Quick Quote', 'pentest-quote-form'),
+                    'subtitle' => __('Get a quote for your cybersecurity needs', 'pentest-quote-form'),
+                ),
                 // Step names for progress bar
                 'step1' => array(
                     'title' => __('Test Selection', 'pentest-quote-form'),
@@ -667,6 +672,32 @@ class PTF_Form_Settings {
                         $defaults = self::get_defaults();
                         $default_labels = $defaults['field_labels'];
                         ?>
+
+                        <!-- Form Header -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-heading" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Form Header', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Form Title', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][form_header][title]"
+                                           value="<?php echo esc_attr($field_labels['form_header']['title'] ?? ($default_labels['form_header']['title'] ?? 'Get Quick Quote')); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: Get Quick Quote', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Form Subtitle', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][form_header][subtitle]"
+                                           value="<?php echo esc_attr($field_labels['form_header']['subtitle'] ?? ($default_labels['form_header']['subtitle'] ?? 'Get a quote for your cybersecurity needs')); ?>"
+                                           class="large-text">
+                                    <p class="description"><?php esc_html_e('Default: Get a quote for your cybersecurity needs', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
 
                         <!-- Progress Bar Step Names -->
                         <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">

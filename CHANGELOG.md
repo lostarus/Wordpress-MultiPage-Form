@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.0] - 2026-03-10
+## [1.2.0] - 2026-03-12
 
 ### Added
 - **Button Text Color**: New color picker to customize text color for all primary buttons
@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Custom Button Size**: Define exact pixel values for padding (vertical/horizontal) and font size
 - **Live Preview**: All color and size settings now update instantly in the admin preview
 - **Enhanced Button Styling**: Button text color now applies to Next, Submit, and Popup trigger buttons
+- **Form Header Customization**: Customize the form title ("Get Quick Quote") and subtitle from Settings > Form Labels
 
 ### Improved
 - **reCAPTCHA Error Handling**: Better error catching with user-friendly messages instead of silent failures

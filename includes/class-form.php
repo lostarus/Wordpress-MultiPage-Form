@@ -1254,13 +1254,21 @@ class PTF_Multi_Step_Form {
     }
 
     public function render_popup_form() {
+        // Get field labels for header
+        $field_labels = $this->get_setting('field_labels', array());
+        $form_title = isset($field_labels['form_header']['title']) && !empty($field_labels['form_header']['title'])
+            ? $field_labels['form_header']['title']
+            : __('Get Quick Quote', 'pentest-quote-form');
+        $form_subtitle = isset($field_labels['form_header']['subtitle']) && !empty($field_labels['form_header']['subtitle'])
+            ? $field_labels['form_header']['subtitle']
+            : __('Get a quote for your cybersecurity needs', 'pentest-quote-form');
         ?>
         <div id="ptf-popup-overlay" class="ptf-popup-overlay" style="display: none;">
             <div class="ptf-popup-container">
                 <button type="button" class="ptf-popup-close" aria-label="<?php esc_attr_e('Close', 'pentest-quote-form'); ?>"><span>&times;</span></button>
                 <div class="ptf-popup-header">
-                    <h2 class="ptf-popup-title"><?php esc_html_e('Get Quick Quote', 'pentest-quote-form'); ?></h2>
-                    <p class="ptf-popup-subtitle"><?php esc_html_e('Get a quote for your cybersecurity needs', 'pentest-quote-form'); ?></p>
+                    <h2 class="ptf-popup-title"><?php echo esc_html($form_title); ?></h2>
+                    <p class="ptf-popup-subtitle"><?php echo esc_html($form_subtitle); ?></p>
                 </div>
                 <?php echo $this->get_form_html('popup'); ?>
             </div>
@@ -1269,9 +1277,18 @@ class PTF_Multi_Step_Form {
     }
 
     public function render_inline_form($atts) {
+        // Get field labels for default header values
+        $field_labels = $this->get_setting('field_labels', array());
+        $default_title = isset($field_labels['form_header']['title']) && !empty($field_labels['form_header']['title'])
+            ? $field_labels['form_header']['title']
+            : __('Get Quick Quote', 'pentest-quote-form');
+        $default_subtitle = isset($field_labels['form_header']['subtitle']) && !empty($field_labels['form_header']['subtitle'])
+            ? $field_labels['form_header']['subtitle']
+            : __('Get a quote for your cybersecurity needs', 'pentest-quote-form');
+
         $atts = shortcode_atts(array(
-            'title' => __('Get Quick Quote', 'pentest-quote-form'),
-            'subtitle' => __('Get a quote for your cybersecurity needs', 'pentest-quote-form'),
+            'title' => $default_title,
+            'subtitle' => $default_subtitle,
             'class' => '',
             'primary' => '',
             'secondary' => ''
@@ -1417,6 +1434,11 @@ class PTF_Multi_Step_Form {
         // Get field labels from settings
         $field_labels = $this->get_setting('field_labels', array());
         $default_labels = array(
+            // Form header (title and subtitle)
+            'form_header' => array(
+                'title' => __('Get Quick Quote', 'pentest-quote-form'),
+                'subtitle' => __('Get a quote for your cybersecurity needs', 'pentest-quote-form'),
+            ),
             // Step names for progress bar
             'step1' => array(
                 'title' => __('Test Selection', 'pentest-quote-form'),
