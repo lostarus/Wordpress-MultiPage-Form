@@ -645,6 +645,54 @@
 }
 
 /* =========================================
+   Radio & Checkbox Groups (Question Answers)
+   ========================================= */
+.ptf-radio-group,
+.ptf-checkbox-group-inline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.ptf-radio-item,
+.ptf-checkbox-item-inline {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+}
+
+.ptf-radio-item:hover,
+.ptf-checkbox-item-inline:hover {
+    border-color: #2F7CFF;
+    background: #fff;
+}
+
+.ptf-radio-item input[type="radio"],
+.ptf-checkbox-item-inline input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #2F7CFF;
+}
+
+.ptf-radio-label,
+.ptf-checkbox-label {
+    cursor: pointer;
+}
+
+.ptf-checkbox-mark-small {
+    display: none;
+}
+
+/* =========================================
    KVKK Onay Alanı
    ========================================= */
 .ptf-consent-group {
@@ -765,18 +813,9 @@
     color: var(--ptf-button-text, #fff);
 }
 
-.ptf-btn-next:hover,
-.ptf-btn-submit:hover:not(:disabled) {
-    opacity: 0.9;
-}
-
 .ptf-btn-prev {
     background: #f3f4f6;
     color: #374151;
-}
-
-.ptf-btn-prev:hover {
-    background: #e5e7eb;
 }
 
 .ptf-btn-arrow {
@@ -855,11 +894,6 @@
     justify-content: center;
 }
 
-.ptf-popup-close:hover {
-    background: #e5e7eb;
-    color: #1a1a1a;
-}
-
 /* =========================================
    Popup Tetikleyici Buton
    ========================================= */
@@ -876,7 +910,6 @@
     outline: none;
     border-radius: 50px;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(47, 124, 255, 0.3);
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -907,14 +940,8 @@
     gap: 14px;
 }
 
-.ptf-popup-trigger:hover {
-    opacity: 0.9;
-    color: var(--ptf-button-text, #fff);
-}
-
 .ptf-popup-trigger:focus {
     outline: none;
-    box-shadow: 0 4px 15px rgba(47, 124, 255, 0.3);
     color: var(--ptf-button-text, #fff);
 }
 

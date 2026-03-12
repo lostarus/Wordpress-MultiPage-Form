@@ -272,18 +272,8 @@ class PTF_Multi_Step_Form {
             background: linear-gradient(135deg, {$primary} 0%, {$primary_dark} 100%);
             color: {$button_text_color};
         }
-        .ptf-btn-next:hover,
-        .ptf-btn-submit:hover:not(:disabled) {
-            box-shadow: 0 4px 15px " . $this->hex_to_rgba($primary, 0.4) . ";
-            color: {$button_text_color};
-        }
         .ptf-popup-trigger {
             background: linear-gradient(135deg, {$primary} 0%, {$primary_dark} 100%);
-            box-shadow: 0 4px 15px " . $this->hex_to_rgba($primary, 0.3) . ";
-            color: {$button_text_color};
-        }
-        .ptf-popup-trigger:hover {
-            box-shadow: 0 8px 25px " . $this->hex_to_rgba($primary, 0.4) . ";
             color: {$button_text_color};
         }
         .ptf-spinner {
@@ -1412,7 +1402,6 @@ class PTF_Multi_Step_Form {
         if (!empty($atts['primary'])) {
             $primary_dark = $this->adjust_brightness($atts['primary'], -30);
             $custom_style .= " background: linear-gradient(135deg, {$atts['primary']} 0%, {$primary_dark} 100%);";
-            $custom_style .= " box-shadow: 0 4px 15px " . $this->hex_to_rgba($atts['primary'], 0.3) . ";";
         }
 
         // Custom size via shortcode attributes
