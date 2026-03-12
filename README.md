@@ -3,24 +3,50 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.2%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.1.0-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+[![Version](https://img.shields.io/badge/Version-1.3.0-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
 
-A professional WordPress plugin for cybersecurity penetration test quote requests.
+A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, webhook integrations, and full customization options.
+
+## Table of Contents
+
+- [Features](#-features)
+- [Requirements](#-requirements)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Shortcode Usage](#-shortcode-usage)
+- [Settings Panel](#%EF%B8%8F-settings-panel)
+- [Question & Category Management](#-question--category-management)
+- [Customizing Form Labels](#-customizing-form-labels)
+- [Typography Settings](#-typography-settings)
+- [Webhook Integrations](#-webhook-integrations)
+- [Managing Submissions](#-managing-submissions)
+- [Security](#%EF%B8%8F-security)
+- [Style Customization](#-style-customization)
+- [Troubleshooting](#-troubleshooting)
+- [FAQ](#-faq)
+- [Technical Reference](#-technical-reference)
+- [License](#-license)
+
+---
 
 ## 🚀 Features
 
-- ✅ Multi-step form structure with progress indicator
-- ✅ Popup and inline form support
-- ✅ Dynamic category and question management
-- ✅ Google reCAPTCHA v3 integration
-- ✅ Webhook/API integrations (Power Automate, Zapier, Make, etc.)
-- ✅ Corporate email filter
-- ✅ GDPR-compliant consent mechanism
-- ✅ Customizable colors and texts
-- ✅ CSV export feature
-- ✅ Mobile-responsive design
-- ✅ Email notifications
-- ✅ Admin dashboard for submissions
+| Feature | Description |
+|---------|-------------|
+| 🔄 **Multi-Step Form** | 3-step form with progress indicator |
+| 🎯 **Popup & Inline** | Both popup and embedded form support |
+| 📝 **Dynamic Questions** | Category-based question management |
+| 🔗 **Webhook/API** | Power Automate, Zapier, Make integrations |
+| 🛡️ **reCAPTCHA v3** | Google reCAPTCHA bot protection |
+| 📧 **Email Notifications** | Automatic notifications and auto-reply |
+| 📊 **CSV Export** | Export submissions to CSV |
+| 🎨 **Full Customization** | Colors, fonts, labels, messages |
+| 🔤 **Typography** | 8 Google Fonts + system + custom fonts |
+| 📱 **Mobile Responsive** | Fully responsive design |
+| 🏢 **Corporate Email Filter** | Blocks personal email addresses |
+| ✅ **GDPR Compliant** | Privacy consent mechanism |
+
+---
 
 ## 📋 Requirements
 
@@ -28,95 +54,516 @@ A professional WordPress plugin for cybersecurity penetration test quote request
 - PHP 7.2 or higher
 - MySQL 5.6 or higher
 
+---
+
 ## 📦 Installation
 
-### WordPress Admin Panel
+### Method 1: WordPress Admin Panel
 
-1. Download the latest release as ZIP from [Releases](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
-2. WordPress Admin → Plugins → Add New → Upload Plugin
-3. Upload the ZIP file and activate
+1. Download the latest release from [Releases](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+2. **WordPress Admin → Plugins → Add New → Upload Plugin**
+3. Upload the ZIP file and click **Activate**
 
-### FTP/File Manager
+### Method 2: FTP/File Manager
 
-1. Upload the `pentest-quote-form` folder to `/wp-content/plugins/` directory
-2. WordPress Admin → Plugins → Pentest Quote Form → Activate
+1. Upload the `pentest-quote-form` folder to `/wp-content/plugins/`
+2. Activate from **WordPress Admin → Plugins**
 
-### From Source
+### Method 3: Git
 
 ```bash
 cd /wp-content/plugins/
 git clone https://github.com/lostarus/Wordpress-MultiPage-Form.git pentest-quote-form
 ```
 
-## 🔧 Usage
+---
 
-### Popup Button
+## 🏁 Quick Start
+
+1. Go to **WordPress Admin → Quote Requests → Settings**
+2. Enter your notification email address
+3. Add shortcode to any page:
+   - Popup button: `[ptf_popup_trigger]`
+   - Inline form: `[ptf_multistep_form]`
+
+---
+
+## 📝 Shortcode Usage
+
+### Popup Trigger Button
 
 ```
 [ptf_popup_trigger]
 [ptf_popup_trigger text="Get Quote"]
-[ptf_popup_trigger text="Request Quote" class="custom-class"]
+[ptf_popup_trigger text="Request Quote" class="my-btn" primary="#E74C3C"]
 ```
+
+#### Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `text` | "Get Quick Quote" | Button text |
+| `class` | - | Additional CSS class |
+| `primary` | #2F7CFF | Primary/background color |
+| `secondary` | #B7FF10 | Secondary color |
+| `size` | medium | `small`, `medium`, `large`, `xlarge`, `custom` |
+| `padding_y` | - | Custom vertical padding (px) |
+| `padding_x` | - | Custom horizontal padding (px) |
+| `font_size` | - | Custom font size (px) |
+
+#### Size Examples
+
+```
+[ptf_popup_trigger size="small"]
+[ptf_popup_trigger size="xlarge" text="Get Your Quote Now"]
+[ptf_popup_trigger padding_y="20" padding_x="50" font_size="18"]
+```
+
+| Size | Padding | Font |
+|------|---------|------|
+| small | 12px 24px | 14px |
+| medium | 16px 32px | 16px |
+| large | 20px 40px | 18px |
+| xlarge | 24px 48px | 20px |
 
 ### Inline Form
 
 ```
 [ptf_multistep_form]
-[ptf_multistep_form title="Quote Form"]
+[ptf_multistep_form primary="#9B59B6" secondary="#F1C40F"]
 ```
 
-## ⚙️ Configuration
+---
 
-1. Go to **Quote Requests → Settings** in WordPress admin
-2. Configure notification email, colors, and reCAPTCHA settings
-3. Go to **Quote Requests → Questions** to manage form questions
+## ⚙️ Settings Panel
 
-### Webhook Integration
+Access settings from **WordPress Admin → Quote Requests → Settings**.
 
-The plugin supports webhook integrations for automation:
+### Email Settings
 
-1. Go to **Quote Requests → Settings**
-2. Enable Webhook and enter your endpoint URL
-3. Form submissions will be sent as JSON to your webhook
+| Setting | Description |
+|---------|-------------|
+| **Notification Email** | Receives form submissions (comma-separated for multiple) |
+| **Auto Reply** | Sends confirmation to submitter |
 
-Compatible with:
-- Microsoft Power Automate
-- Zapier
-- Make (Integromat)
-- n8n
-- Custom endpoints
+### Data Storage
 
-## 📸 Screenshots
+| Setting | Description |
+|---------|-------------|
+| **Save to Database** | Stores submissions in WordPress database |
+| **Send Email** | Sends email notification per submission |
 
-### Multi-Step Form
-The form guides users through multiple steps with a progress indicator.
+> ⚠️ At least one option must be active!
 
-### Admin Dashboard
-Manage all form submissions from the WordPress admin panel.
+### Color Settings
+
+| Setting | Default | Usage |
+|---------|---------|-------|
+| **Primary Color** | #2F7CFF | Buttons, active elements |
+| **Secondary Color** | #B7FF10 | Success icons |
+| **Button Text Color** | #FFFFFF | Popup trigger button text |
+
+### Button Size
+
+| Preset | Description |
+|--------|-------------|
+| Small | Compact (12px 24px, 14px font) |
+| Medium | Default (16px 32px, 16px font) |
+| Large | Larger (20px 40px, 18px font) |
+| Extra Large | Biggest (24px 48px, 20px font) |
+| Custom (px) | Define your own values |
+
+### Privacy Links
+
+| Setting | Example |
+|---------|---------|
+| **Privacy Notice URL** | `/privacy-notice` |
+| **Privacy Policy URL** | `/privacy-policy` |
+
+---
+
+## 📝 Question & Category Management
+
+Manage from **WordPress Admin → Quote Requests → Questions**.
+
+### Adding Categories
+
+1. Click **Add New Category**
+2. Enter name, ID (lowercase with hyphens), and icon (emoji)
+3. Activate/deactivate as needed
+
+### Question Types
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| **text** | Single line | Short answers |
+| **textarea** | Multi-line | Long descriptions |
+| **number** | Numeric | Quantities |
+| **select** | Dropdown | Single selection |
+| **radio** | Radio buttons | Single selection (visible) |
+| **checkbox** | Checkboxes | Multiple selection |
+| **date** | Date picker | Dates |
+| **email** | Email field | Email validation |
+| **tel** | Phone field | Phone numbers |
+
+### Adding Options
+
+For `select`, `radio`, `checkbox` types:
+
+```
+Option Label|option_value
+Yes|yes
+No|no
+```
+
+---
+
+## 🔤 Customizing Form Labels
+
+Customize all texts from **Settings → Form Labels & Texts**.
+
+### Form Header
+
+| Field | Default |
+|-------|---------|
+| **Form Title** | Get Quick Quote |
+| **Form Subtitle** | Get a quote for your cybersecurity needs |
+
+### Progress Bar Steps
+
+| Step | Default |
+|------|---------|
+| Step 1 | Test Selection |
+| Step 2 | Test Details |
+| Step 3 | Contact Information |
+
+### Form Fields
+
+| Field | Label | Placeholder |
+|-------|-------|-------------|
+| Company | Company Name | Company name |
+| Contact | Contact Person | Your Full Name |
+| Email | Email | corporate@yourcompany.com |
+| Phone | Phone | +1 555 XXX XXXX |
+
+### Buttons
+
+| Button | Default |
+|--------|---------|
+| Next | Continue |
+| Back | Back |
+| Submit | Submit |
+
+### Validation Messages
+
+| Message | Default |
+|---------|---------|
+| Required | This field is required. |
+| Invalid Email | Please enter a valid email address. |
+| Corporate Email | Please enter your corporate email address... |
+| Invalid Phone | Please enter a valid phone number. |
+| reCAPTCHA Error | reCAPTCHA verification failed... |
+
+---
+
+## 🔤 Typography Settings
+
+Customize fonts from **Settings → Color Settings → Typography**.
+
+### Font Family Options
+
+| Font | Description |
+|------|-------------|
+| **Inherit** | Uses theme's font |
+| **System UI** | San Francisco, Segoe UI |
+| **Inter** | Modern sans-serif (Google) |
+| **Roboto** | Clean sans-serif (Google) |
+| **Open Sans** | Humanist sans-serif (Google) |
+| **Lato** | Warm sans-serif (Google) |
+| **Poppins** | Geometric sans-serif (Google) |
+| **Montserrat** | Urban sans-serif (Google) |
+| **Nunito** | Rounded sans-serif (Google) |
+| **Custom** | Your own font-family CSS |
+
+### Font Sizes
+
+| Element | Range | Default |
+|---------|-------|---------|
+| Headings | 14-48 px | 26 px |
+| Body Text | 10-24 px | 15 px |
+| Labels | 10-20 px | 14 px |
+
+---
+
+## 🔗 Webhook Integrations
+
+Send form data to external systems automatically.
+
+### Supported Platforms
+
+- **Power Automate** - Microsoft Flow
+- **Zapier** - 5000+ app integrations
+- **Make (Integromat)** - Visual automation
+- **Custom API** - Any endpoint
+
+### Setup
+
+1. Go to **Settings → Webhook / API Integrations**
+2. Enable webhooks
+3. Click platform button or add custom webhook
+4. Enter Webhook URL
+5. Save
+
+### JSON Configuration
+
+```json
+[
+  {
+    "name": "Power Automate",
+    "type": "power_automate",
+    "url": "https://prod-xx.westeurope.logic.azure.com/...",
+    "method": "POST",
+    "active": true
+  },
+  {
+    "name": "CRM API",
+    "type": "custom",
+    "url": "https://api.crm.com/v1/leads",
+    "method": "POST",
+    "auth_type": "bearer",
+    "auth_value": "your-token",
+    "active": true
+  }
+]
+```
+
+### Webhook Payload
+
+```json
+{
+  "meta": {
+    "source": "pentest-quote-form",
+    "version": "1.3.0",
+    "site_name": "Your Site",
+    "submitted_at": "2024-01-15 14:30:00"
+  },
+  "contact": {
+    "name": "John Smith",
+    "email": "john@company.com",
+    "phone": "+1 555 123 4567",
+    "company": "Company Inc."
+  },
+  "selected_categories": [...],
+  "answers": [...],
+  "flat": {...}
+}
+```
+
+---
+
+## 📊 Managing Submissions
+
+View submissions from **WordPress Admin → Quote Requests**.
+
+### Status Options
+
+| Status | Description |
+|--------|-------------|
+| 🆕 new | New submission |
+| 📞 contacted | Contact made |
+| 💰 quoted | Quote sent |
+| ✅ completed | Completed |
+
+### CSV Export
+
+Click **Export as CSV** to download all records.
+
+---
 
 ## 🛡️ Security
 
-- Input sanitization and validation
-- Nonce verification for form submissions
-- Capability checks for admin functions
-- Prepared SQL statements
-- reCAPTCHA protection
+### reCAPTCHA v3
 
-## 📝 License
+1. Get keys from [Google reCAPTCHA](https://www.google.com/recaptcha/admin/create)
+2. Select **reCAPTCHA v3**
+3. Enter Site Key and Secret Key in **Settings → reCAPTCHA**
 
-GPL v2 or later - See [LICENSE](LICENSE) file
+### Corporate Email Filter
 
-## 🆘 Support
+Automatically blocks personal emails:
+- gmail.com, outlook.com, hotmail.com
+- yahoo.com, yandex.com, icloud.com
+- And 50+ other providers
 
-For questions and issues, please use [GitHub Issues](https://github.com/lostarus/Wordpress-MultiPage-Form/issues).
+### Rate Limiting
+
+- Maximum 5 submissions per IP per hour
+- Automatic spam protection
+
+### SSRF Protection
+
+- Localhost/internal IPs blocked for webhooks
+- Only HTTPS/HTTP accepted
+- Metadata endpoints blocked
+
+---
+
+## 🎨 Style Customization
+
+### Via Shortcode
+
+```
+[ptf_popup_trigger primary="#E74C3C" secondary="#2ECC71"]
+[ptf_multistep_form primary="#9B59B6"]
+```
+
+### Via CSS
+
+```css
+/* Button style */
+.ptf-popup-trigger {
+    border-radius: 8px !important;
+}
+
+/* Form container */
+.ptf-form-wrapper {
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15) !important;
+}
+```
+
+### CSS Variables
+
+| Variable | Usage |
+|----------|-------|
+| `--ptf-primary` | Primary color |
+| `--ptf-secondary` | Secondary color |
+| `--ptf-button-text` | Button text color |
+
+---
+
+## 🔧 Troubleshooting
+
+### Form Not Showing
+
+1. Check shortcode syntax
+2. Check browser console for JS errors (F12)
+3. Test for theme/plugin conflicts
+
+### Emails Not Sending
+
+1. Verify **Send Email Notification** is enabled
+2. Check WordPress email settings
+3. Use SMTP plugin (WP Mail SMTP)
+
+### Webhook Errors
+
+1. Verify URL is correct
+2. Use HTTPS
+3. Test with the test button
+4. Check WordPress error logs
+
+### Database Issues
+
+1. Deactivate plugin
+2. Reactivate
+3. Check for `wp_ptf_submissions` table
+
+---
+
+## ❓ FAQ
+
+**Q: Can I use multiple forms on one page?**
+A: Yes, each form works independently.
+
+**Q: Where is data stored?**
+A: In `wp_ptf_submissions` table in WordPress database.
+
+**Q: Is it GDPR compliant?**
+A: Yes, includes privacy consent, CSV export, and record deletion.
+
+**Q: Can I remove corporate email filter?**
+A: Requires code modification.
+
+---
+
+## 📚 Technical Reference
+
+### File Structure
+
+```
+pentest-quote-form/
+├── assets/
+│   ├── css/
+│   │   ├── admin-questions.css
+│   │   ├── admin-settings.css
+│   │   └── form-styles.css
+│   └── js/
+│       ├── admin-questions.js
+│       ├── admin-settings.js
+│       ├── admin-utils.js
+│       └── form-scripts.js
+├── includes/
+│   ├── class-form.php
+│   ├── class-form-admin.php
+│   ├── class-form-questions.php
+│   └── class-form-settings.php
+├── pentest-quote-form.php
+└── uninstall.php
+```
+
+### Hooks & Filters
+
+```php
+// After submission
+do_action('ptf_after_submission', $form_data, $submission_id);
+
+// Email content filter
+$content = apply_filters('ptf_email_content', $content, $form_data);
+
+// Webhook payload filter
+$payload = apply_filters('ptf_webhook_payload', $payload, $form_data);
+```
+
+### Database Schema
+
+```sql
+CREATE TABLE wp_ptf_submissions (
+    id bigint(20) AUTO_INCREMENT,
+    first_name varchar(255),
+    email varchar(255),
+    phone varchar(50),
+    company varchar(255),
+    test_types text,
+    target_scope text,
+    kvkk_consent tinyint(1),
+    page_url varchar(500),
+    user_ip varchar(45),
+    submitted_at datetime,
+    status varchar(20) DEFAULT 'new',
+    PRIMARY KEY (id)
+);
+```
+
+---
+
+## 📄 License
+
+GPL v2 or later. See [LICENSE](LICENSE) for details.
+
+---
 
 ## 🤝 Contributing
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
 
-## 📄 Changelog
+---
 
-See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
+## 🆘 Support
+
+- **Issues:** [GitHub Issues](https://github.com/lostarus/Wordpress-MultiPage-Form/issues)
+- **Changelog:** [CHANGELOG.md](CHANGELOG.md)
+
+---
 
 ## 👨‍💻 Author
 
@@ -125,3 +572,7 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
 ---
 
 ⭐ If you find this plugin useful, please give it a star on GitHub!
+
+---
+
+**Pentest Quote Form** - Professional WordPress plugin for cybersecurity penetration test quote forms.
