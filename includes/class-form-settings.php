@@ -162,6 +162,17 @@ class PTF_Form_Settings {
                     'success_title' => __('Thank You!', 'pentest-quote-form'),
                     'loading' => __('Sending...', 'pentest-quote-form'),
                 ),
+                // Validation messages
+                'validation' => array(
+                    'required' => __('This field is required.', 'pentest-quote-form'),
+                    'email' => __('Please enter a valid email address.', 'pentest-quote-form'),
+                    'corporate_email' => __('Please enter your corporate email address. Personal email addresses are not accepted.', 'pentest-quote-form'),
+                    'phone' => __('Please enter a valid phone number.', 'pentest-quote-form'),
+                    'checkbox_required' => __('You must accept this to continue.', 'pentest-quote-form'),
+                    'test_type_required' => __('Please select at least one test type.', 'pentest-quote-form'),
+                    'error' => __('An error occurred. Please try again.', 'pentest-quote-form'),
+                    'recaptcha_error' => __('reCAPTCHA verification failed. Please try again.', 'pentest-quote-form'),
+                ),
             ),
         );
     }
@@ -990,6 +1001,86 @@ class PTF_Form_Settings {
                                            value="<?php echo esc_attr($field_labels['messages']['loading'] ?? $default_labels['messages']['loading']); ?>"
                                            class="regular-text">
                                     <p class="description"><?php esc_html_e('Default: Sending...', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Validation Messages -->
+                        <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #2F7CFF; padding-bottom: 5px; color: #2F7CFF;">
+                            <span class="dashicons dashicons-warning" style="vertical-align: middle;"></span>
+                            <?php esc_html_e('Validation Messages', 'pentest-quote-form'); ?>
+                        </h4>
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Required Field', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][validation][required]"
+                                           value="<?php echo esc_attr($field_labels['validation']['required'] ?? $default_labels['validation']['required']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: This field is required.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Invalid Email', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][validation][email]"
+                                           value="<?php echo esc_attr($field_labels['validation']['email'] ?? $default_labels['validation']['email']); ?>"
+                                           class="large-text">
+                                    <p class="description"><?php esc_html_e('Default: Please enter a valid email address.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Corporate Email Required', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][validation][corporate_email]"
+                                           value="<?php echo esc_attr($field_labels['validation']['corporate_email'] ?? $default_labels['validation']['corporate_email']); ?>"
+                                           class="large-text">
+                                    <p class="description"><?php esc_html_e('Default: Please enter your corporate email address. Personal email addresses are not accepted.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Invalid Phone', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][validation][phone]"
+                                           value="<?php echo esc_attr($field_labels['validation']['phone'] ?? $default_labels['validation']['phone']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: Please enter a valid phone number.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Checkbox Required', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][validation][checkbox_required]"
+                                           value="<?php echo esc_attr($field_labels['validation']['checkbox_required'] ?? $default_labels['validation']['checkbox_required']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: You must accept this to continue.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('Test Type Required', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][validation][test_type_required]"
+                                           value="<?php echo esc_attr($field_labels['validation']['test_type_required'] ?? $default_labels['validation']['test_type_required']); ?>"
+                                           class="large-text">
+                                    <p class="description"><?php esc_html_e('Default: Please select at least one test type.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('General Error', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][validation][error]"
+                                           value="<?php echo esc_attr($field_labels['validation']['error'] ?? $default_labels['validation']['error']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: An error occurred. Please try again.', 'pentest-quote-form'); ?></p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row"><label><?php esc_html_e('reCAPTCHA Error', 'pentest-quote-form'); ?></label></th>
+                                <td>
+                                    <input type="text" name="ptf_settings[field_labels][validation][recaptcha_error]"
+                                           value="<?php echo esc_attr($field_labels['validation']['recaptcha_error'] ?? $default_labels['validation']['recaptcha_error']); ?>"
+                                           class="regular-text">
+                                    <p class="description"><?php esc_html_e('Default: reCAPTCHA verification failed. Please try again.', 'pentest-quote-form'); ?></p>
                                 </td>
                             </tr>
                         </table>

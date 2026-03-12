@@ -175,6 +175,24 @@ class PTF_Multi_Step_Form {
             }
         }
 
+        // Get validation messages from field_labels
+        $field_labels = $this->get_setting('field_labels', array());
+        $validation_defaults = array(
+            'required' => __('This field is required.', 'pentest-quote-form'),
+            'email' => __('Please enter a valid email address.', 'pentest-quote-form'),
+            'corporate_email' => __('Please enter your corporate email address. Personal email addresses are not accepted.', 'pentest-quote-form'),
+            'phone' => __('Please enter a valid phone number.', 'pentest-quote-form'),
+            'checkbox_required' => __('You must accept this to continue.', 'pentest-quote-form'),
+            'test_type_required' => __('Please select at least one test type.', 'pentest-quote-form'),
+            'error' => __('An error occurred. Please try again.', 'pentest-quote-form'),
+            'recaptcha_error' => __('reCAPTCHA verification failed. Please try again.', 'pentest-quote-form'),
+        );
+        $validation = isset($field_labels['validation']) ? wp_parse_args($field_labels['validation'], $validation_defaults) : $validation_defaults;
+        $messages_defaults = array(
+            'loading' => __('Sending...', 'pentest-quote-form'),
+        );
+        $messages = isset($field_labels['messages']) ? wp_parse_args($field_labels['messages'], $messages_defaults) : $messages_defaults;
+
         wp_localize_script('ptf-multistep-form', 'ptfForm', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('ptf_form_nonce'),
@@ -185,16 +203,16 @@ class PTF_Multi_Step_Form {
                 'siteKey' => $this->recaptcha_site_key,
             ),
             'messages' => array(
-                'required' => __('This field is required.', 'pentest-quote-form'),
-                'email' => __('Please enter a valid email address.', 'pentest-quote-form'),
-                'corporate_email' => __('Please enter your corporate email address. Personal email addresses are not accepted.', 'pentest-quote-form'),
-                'phone' => __('Please enter a valid phone number.', 'pentest-quote-form'),
-                'checkbox_required' => __('You must accept this to continue.', 'pentest-quote-form'),
-                'test_type_required' => __('Please select at least one test type.', 'pentest-quote-form'),
+                'required' => $validation['required'],
+                'email' => $validation['email'],
+                'corporate_email' => $validation['corporate_email'],
+                'phone' => $validation['phone'],
+                'checkbox_required' => $validation['checkbox_required'],
+                'test_type_required' => $validation['test_type_required'],
                 'success' => __('Your form has been submitted successfully!', 'pentest-quote-form'),
-                'error' => __('An error occurred. Please try again.', 'pentest-quote-form'),
-                'sending' => __('Sending...', 'pentest-quote-form'),
-                'recaptcha_error' => __('reCAPTCHA verification failed. Please try again.', 'pentest-quote-form'),
+                'error' => $validation['error'],
+                'sending' => $messages['loading'],
+                'recaptcha_error' => $validation['recaptcha_error'],
             )
         ));
     }
@@ -1500,6 +1518,17 @@ class PTF_Multi_Step_Form {
             'messages' => array(
                 'success_title' => __('Thank You!', 'pentest-quote-form'),
                 'loading' => __('Sending...', 'pentest-quote-form'),
+            ),
+            // Validation messages
+            'validation' => array(
+                'required' => __('This field is required.', 'pentest-quote-form'),
+                'email' => __('Please enter a valid email address.', 'pentest-quote-form'),
+                'corporate_email' => __('Please enter your corporate email address. Personal email addresses are not accepted.', 'pentest-quote-form'),
+                'phone' => __('Please enter a valid phone number.', 'pentest-quote-form'),
+                'checkbox_required' => __('You must accept this to continue.', 'pentest-quote-form'),
+                'test_type_required' => __('Please select at least one test type.', 'pentest-quote-form'),
+                'error' => __('An error occurred. Please try again.', 'pentest-quote-form'),
+                'recaptcha_error' => __('reCAPTCHA verification failed. Please try again.', 'pentest-quote-form'),
             ),
         );
         $field_labels = wp_parse_args($field_labels, $default_labels);

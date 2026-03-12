@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Live Preview**: All color and size settings now update instantly in the admin preview
 - **Enhanced Button Styling**: Button text color now applies to Next, Submit, and Popup trigger buttons
 - **Form Header Customization**: Customize the form title ("Get Quick Quote") and subtitle from Settings > Form Labels
+- **Validation Messages Customization**: All validation error messages are now customizable (required, email, phone, etc.)
 
 ### Improved
 - **reCAPTCHA Error Handling**: Better error catching with user-friendly messages instead of silent failures

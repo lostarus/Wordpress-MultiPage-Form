@@ -370,6 +370,21 @@ Customize all form texts from **Settings → Form Labels & Texts**.
 | **Success Title** | Thank You! |
 | **Loading Text** | Sending... |
 
+### Validation Messages
+
+All form validation error messages can be customized:
+
+| Field | Default |
+|-------|---------|
+| **Required Field** | This field is required. |
+| **Invalid Email** | Please enter a valid email address. |
+| **Corporate Email Required** | Please enter your corporate email address. Personal email addresses are not accepted. |
+| **Invalid Phone** | Please enter a valid phone number. |
+| **Checkbox Required** | You must accept this to continue. |
+| **Test Type Required** | Please select at least one test type. |
+| **General Error** | An error occurred. Please try again. |
+| **reCAPTCHA Error** | reCAPTCHA verification failed. Please try again. |
+
 ---
 
 ## Webhook Integrations
