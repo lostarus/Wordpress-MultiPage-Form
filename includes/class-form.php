@@ -475,6 +475,15 @@ class PTF_Multi_Step_Form {
             $this->send_to_webhooks($form_data);
         }
 
+        // Send to Salesforce (if enabled)
+        $enable_salesforce = $this->get_setting('enable_salesforce', '0') === '1';
+        if ($enable_salesforce) {
+            $sf_result = $this->send_to_salesforce($form_data);
+            if (is_wp_error($sf_result)) {
+                error_log('PTF Salesforce Error: ' . $sf_result->get_error_message());
+            }
+        }
+
         if ($success) {
             $success_msg = $this->get_setting('success_message', __('Your request has been received! We will contact you shortly.', 'pentest-quote-form'));
             wp_send_json_success(array('message' => $success_msg));
@@ -1358,6 +1367,207 @@ class PTF_Multi_Step_Form {
         }
 
         wp_send_json_success(array('results' => $results));
+    }
+
+    // -------------------------------------------------------------------
+    // Salesforce Integration
+    // -------------------------------------------------------------------
+
+    /**
+     * Get a Salesforce OAuth2 access token (password grant, cached via transient).
+     *
+     * @return array|WP_Error  ['access_token' => string, 'instance_url' => string]
+     */
+    private function get_salesforce_token() {
+        $cache_key = 'ptf_sf_token_' . md5(
+            $this->get_setting('salesforce_client_id', '') .
+            $this->get_setting('salesforce_username', '')
+        );
+
+        $cached = get_transient($cache_key);
+        if ($cached) {
+            return $cached;
+        }
+
+        $login_url     = rtrim($this->get_setting('salesforce_login_url', 'https://login.salesforce.com'), '/');
+        $client_id     = $this->get_setting('salesforce_client_id', '');
+        $client_secret = $this->get_setting('salesforce_client_secret', '');
+        $username      = $this->get_setting('salesforce_username', '');
+        $password      = $this->get_setting('salesforce_password', ''); // password+securitytoken
+
+        if (empty($client_id) || empty($client_secret) || empty($username) || empty($password)) {
+            return new WP_Error('sf_config', __('Salesforce credentials are not fully configured.', 'pentest-quote-form'));
+        }
+
+        $response = wp_remote_post($login_url . '/services/oauth2/token', array(
+            'timeout' => 30,
+            'body'    => array(
+                'grant_type'    => 'password',
+                'client_id'     => $client_id,
+                'client_secret' => $client_secret,
+                'username'      => $username,
+                'password'      => $password,
+            ),
+        ));
+
+        if (is_wp_error($response)) {
+            return new WP_Error('sf_http', $response->get_error_message());
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $code = wp_remote_retrieve_response_code($response);
+
+        if ($code !== 200 || empty($body['access_token'])) {
+            $err_msg = isset($body['error_description']) ? $body['error_description'] : __('Unknown Salesforce auth error.', 'pentest-quote-form');
+            return new WP_Error('sf_auth', $err_msg);
+        }
+
+        $token = array(
+            'access_token' => $body['access_token'],
+            'instance_url' => $body['instance_url'],
+        );
+
+        // Cache for 50 minutes (tokens are valid for ~1 hour)
+        set_transient($cache_key, $token, 50 * MINUTE_IN_SECONDS);
+
+        return $token;
+    }
+
+    /**
+     * Build a Salesforce record array from form data using field mapping.
+     *
+     * @param  array $form_data
+     * @return array
+     */
+    private function build_salesforce_record($form_data) {
+        $raw_mapping = $this->get_setting('salesforce_field_mapping', array());
+
+        // Default mapping if none configured
+        if (empty($raw_mapping)) {
+            $raw_mapping = array(
+                'Company'     => 'company',
+                'LastName'    => 'first_name',
+                'Email'       => 'email',
+                'Phone'       => 'phone',
+                'Description' => 'test_types_text',
+            );
+        }
+
+        // Build a flat representation of form data that includes a readable test types string
+        $test_types     = $this->get_test_types();
+        $selected_types = isset($form_data['test_types']) ? $form_data['test_types'] : array();
+        $type_labels    = array_map(function ($id) use ($test_types) {
+            return isset($test_types[$id]) ? $test_types[$id] : $id;
+        }, $selected_types);
+
+        $flat = array_merge($form_data, array(
+            'test_types_text'   => implode(', ', $type_labels),
+            'test_types_labels' => $type_labels,
+        ));
+
+        $record = array();
+        foreach ($raw_mapping as $sf_field => $form_field) {
+            $sf_field   = sanitize_text_field($sf_field);
+            $form_field = sanitize_text_field($form_field);
+
+            if (isset($flat[$form_field])) {
+                $value = $flat[$form_field];
+                $record[$sf_field] = is_array($value) ? implode(', ', $value) : $value;
+            }
+        }
+
+        // Always include LeadSource when the object is Lead
+        $sf_object = $this->get_setting('salesforce_object', 'Lead');
+        if ($sf_object === 'Lead' && empty($record['LeadSource'])) {
+            $record['LeadSource'] = 'Web';
+        }
+
+        return $record;
+    }
+
+    /**
+     * Send form submission to Salesforce via REST API.
+     *
+     * @param  array          $form_data
+     * @return true|WP_Error
+     */
+    private function send_to_salesforce($form_data) {
+        $token_data = $this->get_salesforce_token();
+        if (is_wp_error($token_data)) {
+            return $token_data;
+        }
+
+        $sf_object    = $this->get_setting('salesforce_object', 'Lead');
+        $api_version  = $this->get_setting('salesforce_api_version', 'v59.0');
+        $instance_url = $token_data['instance_url'];
+        $access_token = $token_data['access_token'];
+
+        $endpoint = $instance_url . '/services/data/' . $api_version . '/sobjects/' . rawurlencode($sf_object) . '/';
+
+        $record = $this->build_salesforce_record($form_data);
+
+        // Allow developers to modify the record before sending
+        $record = apply_filters('ptf_salesforce_record', $record, $form_data, $sf_object);
+
+        $response = wp_remote_post($endpoint, array(
+            'timeout' => 30,
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $access_token,
+                'Content-Type'  => 'application/json',
+            ),
+            'body' => json_encode($record, JSON_UNESCAPED_UNICODE),
+        ));
+
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($code === 401) {
+            // Token expired — delete cache and retry once
+            $cache_key = 'ptf_sf_token_' . md5(
+                $this->get_setting('salesforce_client_id', '') .
+                $this->get_setting('salesforce_username', '')
+            );
+            delete_transient($cache_key);
+
+            $token_data = $this->get_salesforce_token();
+            if (is_wp_error($token_data)) {
+                return $token_data;
+            }
+            $access_token = $token_data['access_token'];
+
+            $response = wp_remote_post($endpoint, array(
+                'timeout' => 30,
+                'headers' => array(
+                    'Authorization' => 'Bearer ' . $access_token,
+                    'Content-Type'  => 'application/json',
+                ),
+                'body' => json_encode($record, JSON_UNESCAPED_UNICODE),
+            ));
+
+            $code = wp_remote_retrieve_response_code($response);
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+        }
+
+        if ($code === 201) {
+            // Record created; fire action with the new Salesforce record ID
+            $sf_id = isset($body['id']) ? $body['id'] : '';
+            do_action('ptf_salesforce_record_created', $sf_id, $form_data, $sf_object);
+            return true;
+        }
+
+        $error_msg = __('Salesforce API error.', 'pentest-quote-form');
+        if (!empty($body) && is_array($body)) {
+            $first = reset($body);
+            if (isset($first['message'])) {
+                $error_msg = $first['message'];
+            }
+        }
+
+        return new WP_Error('sf_api', $error_msg . ' (HTTP ' . $code . ')');
     }
 
     private function get_user_ip() {

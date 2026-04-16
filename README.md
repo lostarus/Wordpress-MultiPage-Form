@@ -19,6 +19,7 @@ A professional WordPress plugin for cybersecurity penetration test quote request
 - [Customizing Form Labels](#-customizing-form-labels)
 - [Typography Settings](#-typography-settings)
 - [Webhook Integrations](#-webhook-integrations)
+- [Salesforce Integration](#-salesforce-integration)
 - [Managing Submissions](#-managing-submissions)
 - [Security](#%EF%B8%8F-security)
 - [Style Customization](#-style-customization)
@@ -37,6 +38,7 @@ A professional WordPress plugin for cybersecurity penetration test quote request
 | 🎯 **Popup & Inline** | Both popup and embedded form support |
 | 📝 **Dynamic Questions** | Category-based question management |
 | 🔗 **Webhook/API** | Power Automate, Zapier, Make integrations |
+| ☁️ **Salesforce** | Direct Salesforce Lead/Contact/Opportunity creation via REST API |
 | 🛡️ **reCAPTCHA v3** | Google reCAPTCHA bot protection |
 | 📧 **Email Notifications** | Automatic notifications and auto-reply |
 | 📊 **CSV Export** | Export submissions to CSV |
@@ -295,6 +297,99 @@ Customize fonts from **Settings → Color Settings → Typography**.
 
 ---
 
+## ☁️ Salesforce Integration
+
+Send form submissions directly to Salesforce as a **Lead**, **Contact**, **Account**, **Opportunity**, or **Case** — no third-party middleware required.
+
+### How It Works
+
+The plugin uses the **Salesforce OAuth 2.0 Username-Password flow** to authenticate and then calls the **Salesforce REST API** to create a record on every form submission. An access token is cached for 50 minutes and automatically refreshed when it expires.
+
+### Prerequisites
+
+1. A Salesforce org (Production or Sandbox)
+2. A **Connected App** with OAuth enabled ([How to create one](https://help.salesforce.com/s/articleView?id=sf.connected_app_create.htm))
+   - Enable OAuth Settings → check **Enable OAuth**
+   - Add any Callback URL (e.g. `https://yoursite.com`)
+   - Scopes: **api**, **refresh_token**
+3. Your Salesforce **username**, **password**, and **security token**
+
+### Setup
+
+1. Go to **WordPress Admin → Quote Requests → Settings**
+2. Scroll to **Salesforce Direct Integration**
+3. Check **Enable Salesforce Integration**
+4. Fill in the fields:
+
+| Field | Description |
+|-------|-------------|
+| **Login URL** | `https://login.salesforce.com` (Production) or `https://test.salesforce.com` (Sandbox) |
+| **Consumer Key** | From your Connected App → OAuth Settings |
+| **Consumer Secret** | From your Connected App → OAuth Settings |
+| **Username** | Your Salesforce login email |
+| **Password + Security Token** | Password concatenated with security token, no spaces (e.g. `MyPassword1ABC123xyz`) |
+| **Salesforce Object** | `Lead` (default), `Contact`, `Account`, `Opportunity`, or `Case` |
+| **API Version** | Default `v59.0` — match your org's API version if needed |
+
+5. Configure **Field Mapping** (JSON editor):
+
+```json
+{
+  "Company":     "company",
+  "LastName":    "first_name",
+  "Email":       "email",
+  "Phone":       "phone",
+  "Description": "test_types_text"
+}
+```
+
+The **left key** is the Salesforce API field name; the **right value** is the form field name.
+
+### Available Form Fields for Mapping
+
+| Form Field | Description |
+|------------|-------------|
+| `first_name` | Contact person name |
+| `email` | Email address |
+| `phone` | Phone number |
+| `company` | Company name |
+| `test_types_text` | Readable list of selected test types (comma-separated) |
+| `submitted_at` | Submission date/time |
+| `page_url` | URL of the page where the form was submitted |
+| *(dynamic question IDs)* | Any custom question field key |
+
+> **Note:** When the target object is `Lead`, `LeadSource` is automatically set to `"Web"` if not mapped.
+
+### Developer Hooks
+
+```php
+// Modify the Salesforce record before it is sent
+add_filter('ptf_salesforce_record', function($record, $form_data, $object) {
+    $record['LeadSource'] = 'Website';
+    $record['Rating']     = 'Hot';
+    return $record;
+}, 10, 3);
+
+// Fires after a Salesforce record is successfully created
+add_action('ptf_salesforce_record_created', function($sf_id, $form_data, $object) {
+    // $sf_id is the new Salesforce record ID
+    error_log('Salesforce record created: ' . $sf_id);
+}, 10, 3);
+```
+
+### Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| **Authentication failed** | Double-check Consumer Key/Secret and that the Connected App's IP policy is set to *Relax IP Restrictions* |
+| **Invalid password** | Make sure to append the security token directly to the password |
+| **INVALID_FIELD error** | The mapped Salesforce field name is wrong or doesn't exist on the object |
+| **Required field missing** | Lead requires `LastName` and `Company` — ensure they are mapped |
+| **Sandbox not working** | Set Login URL to `https://test.salesforce.com` |
+| Check logs | Errors are written to the WordPress debug log (`WP_DEBUG_LOG`) with prefix `PTF Salesforce Error:` |
+
+---
+
 ## 🔗 Webhook Integrations
 
 Send form data to external systems automatically.
@@ -522,6 +617,12 @@ $content = apply_filters('ptf_email_content', $content, $form_data);
 
 // Webhook payload filter
 $payload = apply_filters('ptf_webhook_payload', $payload, $form_data);
+
+// Salesforce: modify record before sending
+$record = apply_filters('ptf_salesforce_record', $record, $form_data, $sf_object);
+
+// Salesforce: fires after successful record creation
+do_action('ptf_salesforce_record_created', $sf_id, $form_data, $sf_object);
 ```
 
 ### Database Schema

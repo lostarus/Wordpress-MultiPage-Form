@@ -99,6 +99,22 @@ class PTF_Form_Settings {
             // Webhook/API integrations
             'enable_webhooks' => '0',
             'webhooks' => array(),
+            // Salesforce direct integration
+            'enable_salesforce' => '0',
+            'salesforce_login_url' => 'https://login.salesforce.com',
+            'salesforce_client_id' => '',
+            'salesforce_client_secret' => '',
+            'salesforce_username' => '',
+            'salesforce_password' => '',
+            'salesforce_object' => 'Lead',
+            'salesforce_api_version' => 'v59.0',
+            'salesforce_field_mapping' => array(
+                'Company'     => 'company',
+                'LastName'    => 'first_name',
+                'Email'       => 'email',
+                'Phone'       => 'phone',
+                'Description' => 'test_types_text',
+            ),
             // Static form field labels and placeholders
             'field_labels' => array(
                 // Form header (title and subtitle)
@@ -377,6 +393,42 @@ class PTF_Form_Settings {
 
         // Webhook/API integrations
         $sanitized['enable_webhooks'] = isset($input['enable_webhooks']) ? '1' : '0';
+
+        // Salesforce direct integration
+        $sanitized['enable_salesforce'] = isset($input['enable_salesforce']) ? '1' : '0';
+
+        $allowed_sf_login_urls = array('https://login.salesforce.com', 'https://test.salesforce.com');
+        $sf_login_url = isset($input['salesforce_login_url']) ? esc_url_raw(trim($input['salesforce_login_url'])) : 'https://login.salesforce.com';
+        $sanitized['salesforce_login_url'] = in_array($sf_login_url, $allowed_sf_login_urls) ? $sf_login_url : 'https://login.salesforce.com';
+
+        $sanitized['salesforce_client_id']     = isset($input['salesforce_client_id'])     ? sanitize_text_field($input['salesforce_client_id'])     : '';
+        $sanitized['salesforce_client_secret'] = isset($input['salesforce_client_secret']) ? sanitize_text_field($input['salesforce_client_secret']) : '';
+        $sanitized['salesforce_username']      = isset($input['salesforce_username'])      ? sanitize_email($input['salesforce_username'])           : '';
+        // Password + Security Token — stored as-is (encrypted storage is out of scope, same pattern as other secrets)
+        $sanitized['salesforce_password']      = isset($input['salesforce_password'])      ? sanitize_text_field($input['salesforce_password'])      : '';
+
+        $allowed_sf_objects = array('Lead', 'Contact', 'Account', 'Opportunity', 'Case');
+        $sf_object = isset($input['salesforce_object']) ? sanitize_text_field($input['salesforce_object']) : 'Lead';
+        $sanitized['salesforce_object'] = in_array($sf_object, $allowed_sf_objects) ? $sf_object : 'Lead';
+
+        $sanitized['salesforce_api_version'] = isset($input['salesforce_api_version']) ? sanitize_text_field($input['salesforce_api_version']) : 'v59.0';
+
+        // Salesforce field mapping (JSON textarea → associative array)
+        if (isset($input['salesforce_field_mapping_json']) && !empty($input['salesforce_field_mapping_json'])) {
+            $sf_mapping = json_decode(stripslashes($input['salesforce_field_mapping_json']), true);
+            if (is_array($sf_mapping)) {
+                $sanitized_mapping = array();
+                foreach ($sf_mapping as $sf_field => $form_field) {
+                    $sanitized_mapping[sanitize_text_field($sf_field)] = sanitize_text_field($form_field);
+                }
+                $sanitized['salesforce_field_mapping'] = $sanitized_mapping;
+            } else {
+                $sanitized['salesforce_field_mapping'] = array();
+            }
+        } else {
+            $current = get_option('ptf_settings', array());
+            $sanitized['salesforce_field_mapping'] = isset($current['salesforce_field_mapping']) ? $current['salesforce_field_mapping'] : array();
+        }
 
         // Process webhooks JSON
         if (isset($input['webhooks_json']) && !empty($input['webhooks_json'])) {
@@ -1443,6 +1495,190 @@ class PTF_Form_Settings {
                     </div>
 
 
+                    <!-- Salesforce Direct Integration -->
+                    <div class="ptf-settings-section">
+                        <h2><span class="dashicons dashicons-cloud" style="color:#00A1E0;"></span> <?php esc_html_e('Salesforce Direct Integration', 'pentest-quote-form'); ?></h2>
+                        <p class="description" style="margin-bottom: 15px;">
+                            <?php esc_html_e('Create a Lead/Contact/Opportunity directly in Salesforce when the form is submitted. Uses OAuth 2.0 Username-Password flow.', 'pentest-quote-form'); ?>
+                            <?php printf(
+                                '<a href="%s" target="_blank">%s</a>',
+                                'https://help.salesforce.com/s/articleView?id=sf.connected_app_create.htm',
+                                esc_html__('How to create a Connected App', 'pentest-quote-form')
+                            ); ?>
+                        </p>
+
+                        <table class="form-table">
+                            <tr>
+                                <th scope="row"><?php esc_html_e('Enable Salesforce Integration', 'pentest-quote-form'); ?></th>
+                                <td>
+                                    <label>
+                                        <input type="checkbox"
+                                               name="ptf_settings[enable_salesforce]"
+                                               value="1"
+                                               id="enable_salesforce"
+                                               <?php checked($settings['enable_salesforce'] ?? '0', '1'); ?>>
+                                        <?php esc_html_e('Send form submissions directly to Salesforce', 'pentest-quote-form'); ?>
+                                    </label>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <div id="salesforce-config-section" style="<?php echo ($settings['enable_salesforce'] ?? '0') !== '1' ? 'display:none;' : ''; ?> margin-top: 20px;">
+
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row">
+                                        <label for="salesforce_login_url"><?php esc_html_e('Login URL', 'pentest-quote-form'); ?></label>
+                                    </th>
+                                    <td>
+                                        <select id="salesforce_login_url" name="ptf_settings[salesforce_login_url]">
+                                            <option value="https://login.salesforce.com" <?php selected($settings['salesforce_login_url'] ?? 'https://login.salesforce.com', 'https://login.salesforce.com'); ?>>
+                                                https://login.salesforce.com (<?php esc_html_e('Production', 'pentest-quote-form'); ?>)
+                                            </option>
+                                            <option value="https://test.salesforce.com" <?php selected($settings['salesforce_login_url'] ?? 'https://login.salesforce.com', 'https://test.salesforce.com'); ?>>
+                                                https://test.salesforce.com (<?php esc_html_e('Sandbox', 'pentest-quote-form'); ?>)
+                                            </option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="salesforce_client_id"><?php esc_html_e('Consumer Key (Client ID)', 'pentest-quote-form'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="text"
+                                               id="salesforce_client_id"
+                                               name="ptf_settings[salesforce_client_id]"
+                                               value="<?php echo esc_attr($settings['salesforce_client_id'] ?? ''); ?>"
+                                               class="large-text"
+                                               autocomplete="off"
+                                               placeholder="3MVG9...">
+                                        <p class="description"><?php esc_html_e('Found in your Salesforce Connected App settings.', 'pentest-quote-form'); ?></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="salesforce_client_secret"><?php esc_html_e('Consumer Secret (Client Secret)', 'pentest-quote-form'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="password"
+                                               id="salesforce_client_secret"
+                                               name="ptf_settings[salesforce_client_secret]"
+                                               value="<?php echo esc_attr($settings['salesforce_client_secret'] ?? ''); ?>"
+                                               class="large-text"
+                                               autocomplete="off">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="salesforce_username"><?php esc_html_e('Salesforce Username', 'pentest-quote-form'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="email"
+                                               id="salesforce_username"
+                                               name="ptf_settings[salesforce_username]"
+                                               value="<?php echo esc_attr($settings['salesforce_username'] ?? ''); ?>"
+                                               class="regular-text"
+                                               placeholder="user@example.com">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="salesforce_password"><?php esc_html_e('Password + Security Token', 'pentest-quote-form'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="password"
+                                               id="salesforce_password"
+                                               name="ptf_settings[salesforce_password]"
+                                               value="<?php echo esc_attr($settings['salesforce_password'] ?? ''); ?>"
+                                               class="regular-text"
+                                               autocomplete="off">
+                                        <p class="description">
+                                            <?php esc_html_e('Concatenate your Salesforce password and security token without spaces.', 'pentest-quote-form'); ?>
+                                            <?php esc_html_e('Example: MyPassword1ABC123xyz (password + token)', 'pentest-quote-form'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="salesforce_object"><?php esc_html_e('Salesforce Object', 'pentest-quote-form'); ?></label>
+                                    </th>
+                                    <td>
+                                        <select id="salesforce_object" name="ptf_settings[salesforce_object]">
+                                            <option value="Lead"        <?php selected($settings['salesforce_object'] ?? 'Lead', 'Lead'); ?>>Lead</option>
+                                            <option value="Contact"     <?php selected($settings['salesforce_object'] ?? 'Lead', 'Contact'); ?>>Contact</option>
+                                            <option value="Account"     <?php selected($settings['salesforce_object'] ?? 'Lead', 'Account'); ?>>Account</option>
+                                            <option value="Opportunity" <?php selected($settings['salesforce_object'] ?? 'Lead', 'Opportunity'); ?>>Opportunity</option>
+                                            <option value="Case"        <?php selected($settings['salesforce_object'] ?? 'Lead', 'Case'); ?>>Case</option>
+                                        </select>
+                                        <p class="description"><?php esc_html_e('The Salesforce object type to create on each submission. Lead is recommended.', 'pentest-quote-form'); ?></p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th scope="row">
+                                        <label for="salesforce_api_version"><?php esc_html_e('API Version', 'pentest-quote-form'); ?></label>
+                                    </th>
+                                    <td>
+                                        <input type="text"
+                                               id="salesforce_api_version"
+                                               name="ptf_settings[salesforce_api_version]"
+                                               value="<?php echo esc_attr($settings['salesforce_api_version'] ?? 'v59.0'); ?>"
+                                               class="small-text"
+                                               placeholder="v59.0">
+                                        <p class="description"><?php esc_html_e('Default: v59.0. Check your Salesforce org\'s API version if needed.', 'pentest-quote-form'); ?></p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Field Mapping -->
+                            <h4 style="margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #00A1E0; padding-bottom: 5px; color: #00A1E0;">
+                                <span class="dashicons dashicons-editor-table" style="vertical-align: middle;"></span>
+                                <?php esc_html_e('Field Mapping (Salesforce Field → Form Field)', 'pentest-quote-form'); ?>
+                            </h4>
+                            <p class="description" style="margin-bottom: 12px;">
+                                <?php esc_html_e('Map Salesforce API field names to form field names. Edit the JSON below.', 'pentest-quote-form'); ?>
+                            </p>
+                            <?php
+                            $sf_mapping = $settings['salesforce_field_mapping'] ?? array(
+                                'Company'     => 'company',
+                                'LastName'    => 'first_name',
+                                'Email'       => 'email',
+                                'Phone'       => 'phone',
+                                'Description' => 'test_types_text',
+                            );
+                            ?>
+                            <textarea id="salesforce_field_mapping_json"
+                                      name="ptf_settings[salesforce_field_mapping_json]"
+                                      rows="10"
+                                      class="large-text code"
+                                      style="font-family: monospace; font-size: 12px;"><?php echo esc_textarea(json_encode($sf_mapping, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea>
+                            <p class="description">
+                                <?php esc_html_e('Available form fields:', 'pentest-quote-form'); ?>
+                                <code>first_name</code>, <code>email</code>, <code>phone</code>, <code>company</code>,
+                                <code>test_types_text</code> (<?php esc_html_e('readable test type list', 'pentest-quote-form'); ?>),
+                                <code>submitted_at</code>, <code>page_url</code>
+                            </p>
+
+                            <!-- Status indicator -->
+                            <?php
+                            $sf_configured = !empty($settings['salesforce_client_id'])
+                                && !empty($settings['salesforce_client_secret'])
+                                && !empty($settings['salesforce_username'])
+                                && !empty($settings['salesforce_password']);
+                            ?>
+                            <div style="margin-top: 15px; padding: 10px; border-radius: 4px;
+                                        <?php echo $sf_configured
+                                            ? 'background: #d4edda; border: 1px solid #c3e6cb;'
+                                            : 'background: #fff3cd; border: 1px solid #ffeeba;'; ?>">
+                                <?php if ($sf_configured): ?>
+                                    <span style="color: #155724;">✅ <?php esc_html_e('Salesforce credentials configured. Connection will be tested on the next form submission.', 'pentest-quote-form'); ?></span>
+                                <?php else: ?>
+                                    <span style="color: #856404;">⚠️ <?php esc_html_e('Salesforce credentials incomplete. Please fill in all required fields.', 'pentest-quote-form'); ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Shortcode Bilgisi -->
                     <div class="ptf-settings-section ptf-shortcode-info">
                         <h2><span class="dashicons dashicons-shortcode"></span> <?php esc_html_e('Shortcode Kullanımı', 'pentest-quote-form'); ?></h2>
@@ -1695,6 +1931,15 @@ class PTF_Form_Settings {
                     $('#webhooks-config-section').slideDown();
                 } else {
                     $('#webhooks-config-section').slideUp();
+                }
+            });
+
+            // Salesforce enable/disable toggle
+            $('#enable_salesforce').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#salesforce-config-section').slideDown();
+                } else {
+                    $('#salesforce-config-section').slideUp();
                 }
             });
 
