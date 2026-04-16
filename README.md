@@ -3,7 +3,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.2%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.3.0-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+[![Version](https://img.shields.io/badge/Version-1.4.1-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
 
 A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, webhook integrations, and full customization options.
 
@@ -438,7 +438,7 @@ Send form data to external systems automatically.
 {
   "meta": {
     "source": "pentest-quote-form",
-    "version": "1.3.0",
+    "version": "1.4.1",
     "site_name": "Your Site",
     "submitted_at": "2024-01-15 14:30:00"
   },
