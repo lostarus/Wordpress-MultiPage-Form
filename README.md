@@ -4,10 +4,11 @@
 [![PHP](https://img.shields.io/badge/PHP-7.2%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 [![Version](https://img.shields.io/badge/Version-1.5.5-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+[![Tested up to](https://img.shields.io/badge/Tested%20up%20to-WP%206.4-brightgreen.svg)](https://wordpress.org/)
 
-A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, webhook integrations, and full customization options.
+A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, Salesforce integration, webhook/API integrations, and full customization options.
 
-## Table of Contents
+## 📖 Table of Contents
 
 - [Features](#-features)
 - [Requirements](#-requirements)
@@ -18,37 +19,60 @@ A professional WordPress plugin for cybersecurity penetration test quote request
 - [Question & Category Management](#-question--category-management)
 - [Customizing Form Labels](#-customizing-form-labels)
 - [Typography Settings](#-typography-settings)
-- [Webhook Integrations](#-webhook-integrations)
 - [Salesforce Integration](#-salesforce-integration)
+- [Webhook Integrations](#-webhook-integrations)
 - [Managing Submissions](#-managing-submissions)
 - [Security](#%EF%B8%8F-security)
 - [Style Customization](#-style-customization)
 - [Troubleshooting](#-troubleshooting)
 - [FAQ](#-faq)
 - [Technical Reference](#-technical-reference)
+- [Changelog](#-changelog)
+- [Contributing](#-contributing)
 - [License](#-license)
 
 ---
 
 ## 🚀 Features
 
+### Core Features
+
 | Feature | Description |
 |---------|-------------|
-| 🔄 **Multi-Step Form** | 3-step form with progress indicator |
-| 🎯 **Popup & Inline** | Both popup and embedded form support |
-| 📝 **Dynamic Questions** | Category-based question management |
-| 🔗 **Webhook/API** | Power Automate, Zapier, Make integrations |
-| ☁️ **Salesforce** | Direct Salesforce Lead/Contact/Opportunity creation (External Client App + Legacy support) |
-| 🧪 **Connection Testing** | Test Salesforce connection before going live |
-| 📋 **Activity Log** | Track Salesforce submissions with success/error logs |
+| 🔄 **Multi-Step Form** | 3-step form with animated progress indicator |
+| 🎯 **Popup & Inline** | Both popup modal and embedded form support |
+| 📝 **Dynamic Questions** | Category-based question management with drag & drop |
+| 📱 **Mobile Responsive** | Fully responsive design for all devices |
+| ✅ **GDPR Compliant** | Built-in privacy consent mechanism |
+
+### Integrations
+
+| Feature | Description |
+|---------|-------------|
+| ☁️ **Salesforce** | Direct Lead/Contact/Opportunity creation via REST API |
+| 🔗 **Webhooks** | Power Automate, Zapier, Make, custom API support |
+| 📧 **Email** | Automatic notifications and auto-reply emails |
+
+### Salesforce Features (v1.5.x)
+
+| Feature | Description |
+|---------|-------------|
+| 🆕 **External Client App** | Modern Client Credentials OAuth flow (recommended) |
+| 🔐 **Legacy Support** | Password Grant flow for backward compatibility |
+| 🧪 **Connection Testing** | Test button to verify integration before going live |
+| 📋 **Activity Log** | Real-time log of last 20 Salesforce events |
+| 🗺️ **Field Mapping** | JSON-based field mapping with custom fields support |
+| 🌐 **My Domain Support** | Custom Salesforce domain URL support |
+
+### Security & Customization
+
+| Feature | Description |
+|---------|-------------|
 | 🛡️ **reCAPTCHA v3** | Google reCAPTCHA bot protection |
-| 📧 **Email Notifications** | Automatic notifications and auto-reply |
-| 📊 **CSV Export** | Export submissions to CSV |
+| 🏢 **Corporate Email Filter** | Blocks 50+ personal email providers |
 | 🎨 **Full Customization** | Colors, fonts, labels, messages |
 | 🔤 **Typography** | 8 Google Fonts + system + custom fonts |
-| 📱 **Mobile Responsive** | Fully responsive design |
-| 🏢 **Corporate Email Filter** | Blocks personal email addresses |
-| ✅ **GDPR Compliant** | Privacy consent mechanism |
+| 📊 **CSV Export** | Export all submissions to CSV |
 
 ---
 
@@ -577,9 +601,9 @@ Send form data to external systems automatically.
 {
   "meta": {
     "source": "pentest-quote-form",
-    "version": "1.4.1",
+    "version": "1.5.5",
     "site_name": "Your Site",
-    "submitted_at": "2024-01-15 14:30:00"
+    "submitted_at": "2026-04-20 14:30:00"
   },
   "contact": {
     "name": "John Smith",
@@ -726,69 +750,149 @@ A: Requires code modification.
 
 ```
 pentest-quote-form/
+├── pentest-quote-form.php    # Main plugin file
+├── uninstall.php             # Clean uninstall handler
+├── README.md                 # This documentation
+├── CHANGELOG.md              # Version history
+├── LICENSE                   # GPL v2 License
+├── CONTRIBUTING.md           # Contribution guidelines
+├── SECURITY.md               # Security policy
+├── CODE_OF_CONDUCT.md        # Code of conduct
 ├── assets/
 │   ├── css/
-│   │   ├── admin-questions.css
-│   │   ├── admin-settings.css
-│   │   └── form-styles.css
+│   │   ├── admin-questions.css   # Question management styles
+│   │   ├── admin-settings.css    # Settings page styles
+│   │   └── form-styles.css       # Frontend form styles
 │   └── js/
-│       ├── admin-questions.js
-│       ├── admin-settings.js
-│       ├── admin-utils.js
-│       └── form-scripts.js
-├── includes/
-│   ├── class-form.php
-│   ├── class-form-admin.php
-│   ├── class-form-questions.php
-│   └── class-form-settings.php
-├── pentest-quote-form.php
-└── uninstall.php
+│       ├── admin-questions.js    # Question management scripts
+│       ├── admin-settings.js     # Settings page scripts
+│       ├── admin-utils.js        # Shared admin utilities
+│       └── form-scripts.js       # Frontend form scripts
+└── includes/
+    ├── class-form.php            # Main form class & Salesforce integration
+    ├── class-form-admin.php      # Admin submissions page
+    ├── class-form-questions.php  # Question/category management
+    └── class-form-settings.php   # Settings management
 ```
 
 ### Hooks & Filters
 
 ```php
-// After submission
+// After successful form submission
 do_action('ptf_after_submission', $form_data, $submission_id);
 
-// Email content filter
+// Modify email content before sending
 $content = apply_filters('ptf_email_content', $content, $form_data);
 
-// Webhook payload filter
+// Modify webhook payload before sending
 $payload = apply_filters('ptf_webhook_payload', $payload, $form_data);
 
-// Salesforce: modify record before sending
+// Modify Salesforce record before sending
 $record = apply_filters('ptf_salesforce_record', $record, $form_data, $sf_object);
 
-// Salesforce: fires after successful record creation
+// Fires after successful Salesforce record creation
 do_action('ptf_salesforce_record_created', $sf_id, $form_data, $sf_object);
+
+// Modify blocked email domains list
+$domains = apply_filters('ptf_blocked_email_domains', $domains);
 ```
 
 ### Database Schema
 
+**Submissions Table: `wp_ptf_submissions`**
+
 ```sql
 CREATE TABLE wp_ptf_submissions (
     id bigint(20) AUTO_INCREMENT,
-    first_name varchar(255),
-    email varchar(255),
-    phone varchar(50),
-    company varchar(255),
-    test_types text,
-    target_scope text,
-    kvkk_consent tinyint(1),
-    page_url varchar(500),
-    user_ip varchar(45),
-    submitted_at datetime,
+    first_name varchar(255) NOT NULL,
+    last_name varchar(255) DEFAULT '',
+    email varchar(255) NOT NULL,
+    phone varchar(50) DEFAULT '',
+    company varchar(255) NOT NULL,
+    test_types text NOT NULL,
+    target_scope text NOT NULL,
+    kvkk_consent tinyint(1) DEFAULT 0,
+    page_url varchar(500) DEFAULT '',
+    user_ip varchar(45) DEFAULT '',
+    submitted_at datetime DEFAULT CURRENT_TIMESTAMP,
     status varchar(20) DEFAULT 'new',
     PRIMARY KEY (id)
 );
 ```
 
+**Questions Table: `wp_ptf_questions`**
+
+```sql
+CREATE TABLE wp_ptf_questions (
+    id bigint(20) AUTO_INCREMENT,
+    option_key varchar(100) NOT NULL DEFAULT 'categories',
+    option_value longtext NOT NULL,
+    updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY option_key (option_key)
+);
+```
+
+### REST API Endpoints
+
+The plugin uses WordPress AJAX for form submission:
+
+| Action | Endpoint | Description |
+|--------|----------|-------------|
+| `ptf_submit_form` | `admin-ajax.php` | Form submission handler |
+| `ptf_test_webhooks` | `admin-ajax.php` | Webhook testing |
+| `ptf_test_salesforce` | `admin-ajax.php` | Salesforce connection test |
+| `ptf_save_questions` | `admin-ajax.php` | Save questions/categories |
+
+---
+
+## 📝 Changelog
+
+### v1.5.5 (2026-04-20)
+- ✅ Fixed: Content-Type header for Salesforce OAuth requests
+- ✅ Fixed: Custom My Domain URLs now persist after save
+- ✅ Fixed: Client Credentials flow works with My Domain
+
+### v1.5.0 - v1.5.4
+- ✨ Added: Salesforce External Client App support (Client Credentials flow)
+- ✨ Added: Test Connection button for Salesforce
+- ✨ Added: Activity Log for Salesforce events
+- ✨ Added: My Domain URL support
+- 🔧 Improved: Error messages with original Salesforce responses
+
+### v1.3.0
+- ✨ Added: Typography settings (8 Google Fonts)
+- ✨ Added: Form header customization
+- ✨ Added: Validation messages customization
+
+### v1.2.0
+- ✨ Added: Button text color and size options
+- ✨ Added: Live preview in admin
+
+### v1.1.0
+- ✨ Added: Customizable form labels and texts
+- ✨ Added: Comprehensive documentation
+
+### v1.0.0
+- 🎉 Initial public release
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
 ---
 
 ## 📄 License
 
-GPL v2 or later. See [LICENSE](LICENSE) for details.
+This project is licensed under the GPL v2 or later. See [LICENSE](LICENSE) for details.
+
+```
+Pentest Quote Form - WordPress Plugin
+Copyright (C) 2026 mustafaer
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+```
 
 ---
 
@@ -796,12 +900,34 @@ GPL v2 or later. See [LICENSE](LICENSE) for details.
 
 Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
 
+### How to Contribute
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/lostarus/Wordpress-MultiPage-Form.git
+
+# Navigate to your WordPress plugins directory
+mv Wordpress-MultiPage-Form /path/to/wordpress/wp-content/plugins/pentest-quote-form
+
+# Activate the plugin in WordPress admin
+```
+
 ---
 
 ## 🆘 Support
 
 - **Issues:** [GitHub Issues](https://github.com/lostarus/Wordpress-MultiPage-Form/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/lostarus/Wordpress-MultiPage-Form/discussions)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
+- **Security:** [SECURITY.md](SECURITY.md)
 
 ---
 
@@ -811,8 +937,22 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 ---
 
-⭐ If you find this plugin useful, please give it a star on GitHub!
+## ⭐ Show Your Support
+
+If you find this plugin useful, please consider:
+- Giving it a ⭐ star on GitHub
+- Sharing it with others
+- [Contributing](#-contributing) to the project
 
 ---
 
-**Pentest Quote Form** - Professional WordPress plugin for cybersecurity penetration test quote forms.
+<p align="center">
+  <strong>Pentest Quote Form</strong><br>
+  Professional WordPress plugin for cybersecurity penetration test quote forms.
+  <br><br>
+  <a href="https://github.com/lostarus/Wordpress-MultiPage-Form/releases">Download Latest Release</a>
+  ·
+  <a href="https://github.com/lostarus/Wordpress-MultiPage-Form/issues">Report Bug</a>
+  ·
+  <a href="https://github.com/lostarus/Wordpress-MultiPage-Form/issues">Request Feature</a>
+</p>
