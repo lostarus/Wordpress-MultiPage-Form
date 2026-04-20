@@ -4,7 +4,7 @@ Tags: form, quote, cybersecurity, multi-step form, popup form, pentest, salesfor
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.5.1
+Stable tag: 1.5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,12 @@ Pentest Quote Form is a professional WordPress plugin specially designed for cyb
 3. Configure from the settings page
 
 == Changelog ==
+
+= 1.5.2 =
+* Improved: Better error messages for Salesforce External Client App configuration issues
+* Improved: Documentation updated for Salesforce "External Client App Manager" (not App Manager)
+* Improved: Clearer instructions for setting up Run As user
+* Fixed: Error message now correctly points to External Client App Manager location
 
 = 1.5.1 =
 * Added: Salesforce "Test Connection" button in admin settings

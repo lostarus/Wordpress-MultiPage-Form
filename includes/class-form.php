@@ -1431,7 +1431,18 @@ class PTF_Multi_Step_Form {
         $code = wp_remote_retrieve_response_code($response);
 
         if ($code !== 200 || empty($body['access_token'])) {
-            $err_msg = isset($body['error_description']) ? $body['error_description'] : __('Unknown Salesforce auth error. Make sure your External Client App is properly configured.', 'pentest-quote-form');
+            $err_msg = isset($body['error_description']) ? $body['error_description'] : '';
+            $error_code = isset($body['error']) ? $body['error'] : '';
+
+            // Provide helpful error messages for common issues
+            $help_msg = $this->get_client_credentials_error_help($error_code, $err_msg);
+
+            if (!empty($help_msg)) {
+                $err_msg = $help_msg;
+            } elseif (empty($err_msg)) {
+                $err_msg = __('Unknown Salesforce auth error. Make sure your External Client App is properly configured.', 'pentest-quote-form');
+            }
+
             return new WP_Error('sf_auth', $err_msg);
         }
 
@@ -1444,6 +1455,41 @@ class PTF_Multi_Step_Form {
         set_transient($cache_key, $token, 50 * MINUTE_IN_SECONDS);
 
         return $token;
+    }
+
+    /**
+     * Get helpful error messages for Client Credentials flow errors
+     */
+    private function get_client_credentials_error_help($error_code, $error_description) {
+        $error_description_lower = strtolower($error_description);
+
+        // "request not supported on this domain" or similar
+        if (strpos($error_description_lower, 'not supported') !== false ||
+            strpos($error_description_lower, 'unsupported') !== false) {
+            return __('Client Credentials flow is not enabled or Run As user not set. In Salesforce Setup: Go to "External Client App Manager" → Find your app → Manage → Edit Policies → Under "Client Credentials Flow" select a Run As user → Save.', 'pentest-quote-form');
+        }
+
+        // Invalid client credentials
+        if ($error_code === 'invalid_client' || strpos($error_description_lower, 'invalid client') !== false) {
+            return __('Invalid Client ID or Client Secret. In Salesforce Setup: Go to "External Client App Manager" → Click your app → Manage Consumer Details → Copy the correct credentials.', 'pentest-quote-form');
+        }
+
+        // Invalid grant
+        if ($error_code === 'invalid_grant') {
+            return __('Invalid grant. Make sure you have assigned a "Run As" user: External Client App Manager → Your App → Manage → Edit Policies → Client Credentials Flow section.', 'pentest-quote-form');
+        }
+
+        // Unauthorized client
+        if ($error_code === 'unauthorized_client') {
+            return __('Unauthorized client. Check that your External Client App has the required OAuth scopes (api, refresh_token) and a Run As user is configured.', 'pentest-quote-form');
+        }
+
+        // Access denied
+        if ($error_code === 'access_denied') {
+            return __('Access denied. Check that: 1) The Run As user has API access and a valid Salesforce license 2) IP Relaxation is set to "Relax IP Restrictions" in Edit Policies.', 'pentest-quote-form');
+        }
+
+        return '';
     }
 
     /**

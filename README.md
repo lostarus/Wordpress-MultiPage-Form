@@ -3,7 +3,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.2%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.5.1-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.2-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
 
 A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, webhook integrations, and full customization options.
 
@@ -322,46 +322,67 @@ This is the modern, secure way to integrate with Salesforce. No username/passwor
 
 1. Log in to your Salesforce org
 2. Go to **Setup** (gear icon → Setup)
-3. Search for **App Manager** in Quick Find
-4. Click **New Connected App** (or **New External Client App** in newer orgs)
+3. In Quick Find, search for **"External Client App Manager"**
+4. Click **"New External Client App"**
 5. Fill in basic information:
-   - **Connected App Name**: `WordPress Form Integration`
+   - **App Name**: `WordPress Form Integration`
    - **API Name**: `WordPress_Form_Integration`
    - **Contact Email**: Your email address
-6. Under **API (Enable OAuth Settings)**:
+   - **Description**: (optional) WordPress form integration
+6. Under **OAuth Settings**:
    - Check **Enable OAuth Settings**
-   - **Callback URL**: `https://yoursite.com` (any valid URL)
-   - Check **Enable Client Credentials Flow**
+   - **Callback URL**: `https://yoursite.com` (any valid URL, not actually used for Client Credentials)
+   - ✅ Check **Enable Client Credentials Flow**
    - **Selected OAuth Scopes**: Add these:
-     - `Access the identity URL service (id, profile, email, address, phone)`
      - `Manage user data via APIs (api)`
      - `Perform requests at any time (refresh_token, offline_access)`
 7. Click **Save** and wait 2-10 minutes for activation
-8. After activation, click **Manage Consumer Details**:
-   - Verify your identity
+
+8. **Get Consumer Key and Secret**:
+   - In **External Client App Manager**, find your app
+   - Click on your app name to open it
+   - Look for **OAuth Settings** or **App Credentials** section
+   - Click **Manage Consumer Details** or similar
+   - Verify your identity (Salesforce will send a verification code)
    - Copy the **Consumer Key** and **Consumer Secret**
-9. **Important - Set Run As User**:
-   - Go to **Setup → Apps → Connected Apps → Manage Connected Apps**
-   - Find your app and click **Edit Policies**
-   - Under **Client Credentials Flow**, select a **Run As** user
-   - This user's permissions will be used for API calls
+
+9. **⚠️ CRITICAL - Set Run As User**:
+   - In **External Client App Manager**, find your app
+   - Click the dropdown arrow (▼) next to your app → **Manage**
+   - Click **Edit Policies** 
+   - Scroll to **Client Credentials Flow** section
+   - **Select a Run As user** from the dropdown
+     - This user's permissions will be used for all API calls
+     - Choose a user with API access (System Administrator or Integration User)
+   - Optionally, under **IP Relaxation**, select "Relax IP restrictions"
+   - Click **Save**
+
+> ⚠️ **Most Common Error**: "request not supported on this domain" means the **Run As user is NOT set**. Step 9 is mandatory!
 
 **Required from Salesforce:**
 - Consumer Key (Client ID)
 - Consumer Secret
+- A Run As user configured in App Policies
+
+**Where to Find Things:**
+| Item | Location in Salesforce Setup |
+|------|------------------------------|
+| Create/View App | Setup → External Client App Manager |
+| Consumer Key/Secret | Your App → Manage Consumer Details |
+| Run As User | Your App → Manage → Edit Policies → Client Credentials Flow |
 
 #### Option 2: Connected App with Password Grant (Legacy)
 
-⚠️ **Deprecated**: Salesforce is phasing out the Password Grant flow. Use Client Credentials if possible.
+⚠️ **Deprecated**: Salesforce is phasing out the Password Grant flow. Use External Client App with Client Credentials if possible.
 
 1. A Salesforce org (Production or Sandbox)
 2. A **Connected App** with OAuth enabled ([How to create one](https://help.salesforce.com/s/articleView?id=sf.connected_app_create.htm))
    - Enable OAuth Settings → check **Enable OAuth**
    - Add any Callback URL (e.g. `https://yoursite.com`)
    - Scopes: **api**, **refresh_token**
-   - Important: Set IP policy to **Relax IP Restrictions** under Manage Connected Apps
+   - Important: Set IP policy to **Relax IP Restrictions** under Manage → Edit Policies
 3. Your Salesforce **username**, **password**, and **security token**
-   - Get security token: Setup → Reset My Security Token
+   - Get security token: Setup → My Personal Information → Reset My Security Token
 
 ### Setup
 
@@ -493,8 +514,10 @@ add_action('ptf_salesforce_record_created', function($sf_id, $form_data, $object
 
 | Problem | Solution |
 |---------|----------|
-| **Authentication failed (Client Credentials)** | Make sure your External Client App has Client Credentials Flow enabled and a Run As user is assigned |
-| **Authentication failed (Password Grant)** | Double-check Consumer Key/Secret and that the Connected App's IP policy is set to *Relax IP Restrictions* |
+| **"request not supported on this domain"** | Run As user not configured. Go to **External Client App Manager** → Your App → Manage → Edit Policies → Select a Run As user under "Client Credentials Flow" → Save |
+| **Authentication failed (Client Credentials)** | Make sure your External Client App has Client Credentials Flow enabled AND a Run As user is assigned |
+| **Authentication failed (Password Grant)** | Double-check Consumer Key/Secret and that IP policy is set to *Relax IP Restrictions* |
+| **Invalid client** | Consumer Key or Consumer Secret is wrong. Go to **External Client App Manager** → Your App → Manage Consumer Details |
 | **Invalid password** | Make sure to append the security token directly to the password (Password Grant only) |
 | **INVALID_FIELD error** | The mapped Salesforce field name is wrong or doesn't exist on the object |
 | **Required field missing** | Lead requires `LastName` and `Company` — ensure they are mapped |
