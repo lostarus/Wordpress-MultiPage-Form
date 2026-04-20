@@ -99,13 +99,14 @@ class PTF_Form_Settings {
             // Webhook/API integrations
             'enable_webhooks' => '0',
             'webhooks' => array(),
-            // Salesforce direct integration
+            // Salesforce direct integration (External Client App)
             'enable_salesforce' => '0',
+            'salesforce_auth_flow' => 'client_credentials', // client_credentials (recommended) or password
             'salesforce_login_url' => 'https://login.salesforce.com',
             'salesforce_client_id' => '',
             'salesforce_client_secret' => '',
-            'salesforce_username' => '',
-            'salesforce_password' => '',
+            'salesforce_username' => '', // Only for password grant flow (legacy)
+            'salesforce_password' => '', // Only for password grant flow (legacy)
             'salesforce_object' => 'Lead',
             'salesforce_api_version' => 'v59.0',
             'salesforce_field_mapping' => array(
@@ -1495,15 +1496,15 @@ class PTF_Form_Settings {
                     </div>
 
 
-                    <!-- Salesforce Direct Integration -->
+                    <!-- Salesforce Direct Integration (External Client App) -->
                     <div class="ptf-settings-section">
                         <h2><span class="dashicons dashicons-cloud" style="color:#00A1E0;"></span> <?php esc_html_e('Salesforce Direct Integration', 'pentest-quote-form'); ?></h2>
                         <p class="description" style="margin-bottom: 15px;">
-                            <?php esc_html_e('Create a Lead/Contact/Opportunity directly in Salesforce when the form is submitted. Uses OAuth 2.0 Username-Password flow.', 'pentest-quote-form'); ?>
+                            <?php esc_html_e('Create a Lead/Contact/Opportunity directly in Salesforce when the form is submitted. Supports both External Client App (recommended) and legacy Connected App authentication.', 'pentest-quote-form'); ?>
                             <?php printf(
                                 '<a href="%s" target="_blank">%s</a>',
-                                'https://help.salesforce.com/s/articleView?id=sf.connected_app_create.htm',
-                                esc_html__('How to create a Connected App', 'pentest-quote-form')
+                                'https://help.salesforce.com/s/articleView?id=sf.connected_app_client_credentials_setup.htm',
+                                esc_html__('How to create an External Client App', 'pentest-quote-form')
                             ); ?>
                         </p>
 
@@ -1524,6 +1525,32 @@ class PTF_Form_Settings {
                         </table>
 
                         <div id="salesforce-config-section" style="<?php echo ($settings['enable_salesforce'] ?? '0') !== '1' ? 'display:none;' : ''; ?> margin-top: 20px;">
+
+                            <!-- Authentication Flow Selection -->
+                            <h4 style="margin-top: 15px; margin-bottom: 10px; border-bottom: 2px solid #00A1E0; padding-bottom: 5px; color: #00A1E0;">
+                                <span class="dashicons dashicons-lock" style="vertical-align: middle;"></span>
+                                <?php esc_html_e('Authentication Method', 'pentest-quote-form'); ?>
+                            </h4>
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row">
+                                        <label for="salesforce_auth_flow"><?php esc_html_e('OAuth Flow', 'pentest-quote-form'); ?></label>
+                                    </th>
+                                    <td>
+                                        <select id="salesforce_auth_flow" name="ptf_settings[salesforce_auth_flow]">
+                                            <option value="client_credentials" <?php selected($settings['salesforce_auth_flow'] ?? 'client_credentials', 'client_credentials'); ?>>
+                                                <?php esc_html_e('Client Credentials (External Client App - Recommended)', 'pentest-quote-form'); ?>
+                                            </option>
+                                            <option value="password" <?php selected($settings['salesforce_auth_flow'] ?? 'client_credentials', 'password'); ?>>
+                                                <?php esc_html_e('Password Grant (Legacy Connected App)', 'pentest-quote-form'); ?>
+                                            </option>
+                                        </select>
+                                        <p class="description">
+                                            <?php esc_html_e('Client Credentials flow is the recommended method for server-to-server integrations. Password Grant is deprecated but supported for backward compatibility.', 'pentest-quote-form'); ?>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
 
                             <table class="form-table">
                                 <tr>
@@ -1553,7 +1580,7 @@ class PTF_Form_Settings {
                                                class="large-text"
                                                autocomplete="off"
                                                placeholder="3MVG9...">
-                                        <p class="description"><?php esc_html_e('Found in your Salesforce Connected App settings.', 'pentest-quote-form'); ?></p>
+                                        <p class="description"><?php esc_html_e('Found in your Salesforce Connected App / External Client App settings.', 'pentest-quote-form'); ?></p>
                                     </td>
                                 </tr>
                                 <tr>
@@ -1569,36 +1596,57 @@ class PTF_Form_Settings {
                                                autocomplete="off">
                                     </td>
                                 </tr>
-                                <tr>
-                                    <th scope="row">
-                                        <label for="salesforce_username"><?php esc_html_e('Salesforce Username', 'pentest-quote-form'); ?></label>
-                                    </th>
-                                    <td>
-                                        <input type="email"
-                                               id="salesforce_username"
-                                               name="ptf_settings[salesforce_username]"
-                                               value="<?php echo esc_attr($settings['salesforce_username'] ?? ''); ?>"
-                                               class="regular-text"
-                                               placeholder="user@example.com">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">
-                                        <label for="salesforce_password"><?php esc_html_e('Password + Security Token', 'pentest-quote-form'); ?></label>
-                                    </th>
-                                    <td>
-                                        <input type="password"
-                                               id="salesforce_password"
-                                               name="ptf_settings[salesforce_password]"
-                                               value="<?php echo esc_attr($settings['salesforce_password'] ?? ''); ?>"
-                                               class="regular-text"
-                                               autocomplete="off">
-                                        <p class="description">
-                                            <?php esc_html_e('Concatenate your Salesforce password and security token without spaces.', 'pentest-quote-form'); ?>
-                                            <?php esc_html_e('Example: MyPassword1ABC123xyz (password + token)', 'pentest-quote-form'); ?>
-                                        </p>
-                                    </td>
-                                </tr>
+                            </table>
+
+                            <!-- Legacy Password Grant Fields (shown only when password flow is selected) -->
+                            <div id="salesforce-password-grant-fields" style="<?php echo ($settings['salesforce_auth_flow'] ?? 'client_credentials') !== 'password' ? 'display:none;' : ''; ?>">
+                                <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #ffc107; padding-bottom: 5px; color: #856404;">
+                                    <span class="dashicons dashicons-warning" style="vertical-align: middle;"></span>
+                                    <?php esc_html_e('Legacy Password Grant Settings', 'pentest-quote-form'); ?>
+                                </h4>
+                                <div style="background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                                    <span style="color: #856404;">⚠️ <?php esc_html_e('Password Grant flow is deprecated by Salesforce. Consider migrating to Client Credentials flow with an External Client App.', 'pentest-quote-form'); ?></span>
+                                </div>
+                                <table class="form-table">
+                                    <tr>
+                                        <th scope="row">
+                                            <label for="salesforce_username"><?php esc_html_e('Salesforce Username', 'pentest-quote-form'); ?></label>
+                                        </th>
+                                        <td>
+                                            <input type="email"
+                                                   id="salesforce_username"
+                                                   name="ptf_settings[salesforce_username]"
+                                                   value="<?php echo esc_attr($settings['salesforce_username'] ?? ''); ?>"
+                                                   class="regular-text"
+                                                   placeholder="user@example.com">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">
+                                            <label for="salesforce_password"><?php esc_html_e('Password + Security Token', 'pentest-quote-form'); ?></label>
+                                        </th>
+                                        <td>
+                                            <input type="password"
+                                                   id="salesforce_password"
+                                                   name="ptf_settings[salesforce_password]"
+                                                   value="<?php echo esc_attr($settings['salesforce_password'] ?? ''); ?>"
+                                                   class="regular-text"
+                                                   autocomplete="off">
+                                            <p class="description">
+                                                <?php esc_html_e('Concatenate your Salesforce password and security token without spaces.', 'pentest-quote-form'); ?>
+                                                <?php esc_html_e('Example: MyPassword1ABC123xyz (password + token)', 'pentest-quote-form'); ?>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Object and API Settings -->
+                            <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #00A1E0; padding-bottom: 5px; color: #00A1E0;">
+                                <span class="dashicons dashicons-database" style="vertical-align: middle;"></span>
+                                <?php esc_html_e('Salesforce Object Settings', 'pentest-quote-form'); ?>
+                            </h4>
+                            <table class="form-table">
                                 <tr>
                                     <th scope="row">
                                         <label for="salesforce_object"><?php esc_html_e('Salesforce Object', 'pentest-quote-form'); ?></label>
@@ -1661,19 +1709,37 @@ class PTF_Form_Settings {
 
                             <!-- Status indicator -->
                             <?php
-                            $sf_configured = !empty($settings['salesforce_client_id'])
-                                && !empty($settings['salesforce_client_secret'])
-                                && !empty($settings['salesforce_username'])
-                                && !empty($settings['salesforce_password']);
+                            $sf_auth_flow = $settings['salesforce_auth_flow'] ?? 'client_credentials';
+                            if ($sf_auth_flow === 'client_credentials') {
+                                $sf_configured = !empty($settings['salesforce_client_id'])
+                                    && !empty($settings['salesforce_client_secret']);
+                            } else {
+                                $sf_configured = !empty($settings['salesforce_client_id'])
+                                    && !empty($settings['salesforce_client_secret'])
+                                    && !empty($settings['salesforce_username'])
+                                    && !empty($settings['salesforce_password']);
+                            }
                             ?>
                             <div style="margin-top: 15px; padding: 10px; border-radius: 4px;
                                         <?php echo $sf_configured
                                             ? 'background: #d4edda; border: 1px solid #c3e6cb;'
                                             : 'background: #fff3cd; border: 1px solid #ffeeba;'; ?>">
                                 <?php if ($sf_configured): ?>
-                                    <span style="color: #155724;">✅ <?php esc_html_e('Salesforce credentials configured. Connection will be tested on the next form submission.', 'pentest-quote-form'); ?></span>
+                                    <span style="color: #155724;">✅ <?php
+                                        if ($sf_auth_flow === 'client_credentials') {
+                                            esc_html_e('Salesforce External Client App credentials configured. Connection will be tested on the next form submission.', 'pentest-quote-form');
+                                        } else {
+                                            esc_html_e('Salesforce credentials configured (Legacy Password Grant). Connection will be tested on the next form submission.', 'pentest-quote-form');
+                                        }
+                                    ?></span>
                                 <?php else: ?>
-                                    <span style="color: #856404;">⚠️ <?php esc_html_e('Salesforce credentials incomplete. Please fill in all required fields.', 'pentest-quote-form'); ?></span>
+                                    <span style="color: #856404;">⚠️ <?php
+                                        if ($sf_auth_flow === 'client_credentials') {
+                                            esc_html_e('Salesforce credentials incomplete. Client ID and Client Secret are required for External Client App.', 'pentest-quote-form');
+                                        } else {
+                                            esc_html_e('Salesforce credentials incomplete. Please fill in all required fields for Password Grant flow.', 'pentest-quote-form');
+                                        }
+                                    ?></span>
                                 <?php endif; ?>
                             </div>
                         </div>

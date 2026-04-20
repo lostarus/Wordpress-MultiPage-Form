@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-04-20
+
+### Added
+- **Salesforce External Client App Support**: Now supports the new Salesforce External Client App structure with Client Credentials OAuth flow (recommended)
+- **OAuth Flow Selection**: Choose between Client Credentials (recommended) or Password Grant (legacy) authentication methods
+- **Backward Compatibility**: Existing Password Grant setups continue to work without changes
+- **Migration Guide**: Documentation for migrating from Password Grant to Client Credentials flow
+
+### Improved
+- **Admin UI**: Reorganized Salesforce settings with clear authentication method selection
+- **Status Indicator**: Dynamic status indicator that adapts to the selected authentication flow
+- **Error Messages**: More specific error messages for each authentication method
+- **Documentation**: Comprehensive guide for both External Client App and legacy Connected App setup
+
+### Changed
+- Client Credentials flow is now the default and recommended authentication method
+- Salesforce settings section now shows/hides fields based on selected OAuth flow
+
 ## [1.3.0] - 2026-03-12
 
 ### Added

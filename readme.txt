@@ -1,14 +1,14 @@
 === Pentest Quote Form ===
 Contributors: mustafaer
-Tags: form, quote, cybersecurity, multi-step form, popup form, pentest
+Tags: form, quote, cybersecurity, multi-step form, popup form, pentest, salesforce
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.3.0
+Stable tag: 1.5.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Cybersecurity penetration test quote form - Multi-step form with popup and inline form support.
+Cybersecurity penetration test quote form - Multi-step form with popup and inline form support. Includes Salesforce and Webhook/API integrations.
 
 == Description ==
 
@@ -20,7 +20,8 @@ Pentest Quote Form is a professional WordPress plugin specially designed for cyb
 * Popup and inline form support
 * Dynamic category and question management
 * Google reCAPTCHA v3 integration
-* Webhook/API integrations
+* **Salesforce Direct Integration** (External Client App & Legacy Connected App support)
+* Webhook/API integrations (Power Automate, Zapier, Make, Custom)
 * Corporate email filter
 * GDPR-compliant consent mechanism
 * Fully customizable form labels and texts
@@ -33,6 +34,24 @@ Pentest Quote Form is a professional WordPress plugin specially designed for cyb
 3. Configure from the settings page
 
 == Changelog ==
+
+= 1.5.0 =
+* Added: Salesforce External Client App support with Client Credentials OAuth flow (recommended)
+* Added: OAuth flow selection - choose between Client Credentials or Password Grant authentication
+* Added: Migration guide for transitioning from Password Grant to Client Credentials
+* Improved: Admin UI with reorganized Salesforce settings and dynamic field visibility
+* Improved: Status indicator adapts to selected authentication flow
+* Improved: More specific error messages for each authentication method
+* Changed: Client Credentials flow is now the default for new installations
+* Maintained: Full backward compatibility with existing Password Grant setups
+
+= 1.3.0 =
+* Added: Typography settings (font family and sizes)
+* Added: Form header customization
+* Added: Validation messages customization
+* Added: Radio & checkbox inline styling
+* Removed: Yes/No answer type (use Dropdown instead)
+* Removed: Button hover animations
 
 = 1.2.0 =
 * Added: Button text color customization option

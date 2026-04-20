@@ -303,9 +303,27 @@ Send form submissions directly to Salesforce as a **Lead**, **Contact**, **Accou
 
 ### How It Works
 
-The plugin uses the **Salesforce OAuth 2.0 Username-Password flow** to authenticate and then calls the **Salesforce REST API** to create a record on every form submission. An access token is cached for 50 minutes and automatically refreshed when it expires.
+The plugin supports two OAuth 2.0 authentication methods:
+
+1. **Client Credentials Flow (Recommended)** - Uses the new Salesforce External Client App structure. No username/password required.
+2. **Password Grant Flow (Legacy)** - Uses the traditional Connected App with username/password. Deprecated but supported for backward compatibility.
+
+An access token is cached for 50 minutes and automatically refreshed when it expires.
 
 ### Prerequisites
+
+#### Option 1: External Client App (Recommended)
+
+1. A Salesforce org (Production or Sandbox)
+2. An **External Client App** with Client Credentials enabled ([How to create one](https://help.salesforce.com/s/articleView?id=sf.connected_app_client_credentials_setup.htm))
+   - Go to **Setup → Apps → App Manager → New Connected App**
+   - Enable OAuth Settings
+   - Check **Enable Client Credentials Flow**
+   - Add required OAuth Scopes: **api**, **refresh_token**
+   - Assign a **Run As** user (the user context for API calls)
+3. Your **Consumer Key** (Client ID) and **Consumer Secret**
+
+#### Option 2: Connected App with Password Grant (Legacy)
 
 1. A Salesforce org (Production or Sandbox)
 2. A **Connected App** with OAuth enabled ([How to create one](https://help.salesforce.com/s/articleView?id=sf.connected_app_create.htm))
@@ -319,10 +337,24 @@ The plugin uses the **Salesforce OAuth 2.0 Username-Password flow** to authentic
 1. Go to **WordPress Admin → Quote Requests → Settings**
 2. Scroll to **Salesforce Direct Integration**
 3. Check **Enable Salesforce Integration**
-4. Fill in the fields:
+4. Select your **OAuth Flow**:
+
+#### Client Credentials Flow (External Client App)
 
 | Field | Description |
 |-------|-------------|
+| **OAuth Flow** | Select "Client Credentials (External Client App - Recommended)" |
+| **Login URL** | `https://login.salesforce.com` (Production) or `https://test.salesforce.com` (Sandbox) |
+| **Consumer Key** | From your External Client App → OAuth Settings |
+| **Consumer Secret** | From your External Client App → OAuth Settings |
+| **Salesforce Object** | `Lead` (default), `Contact`, `Account`, `Opportunity`, or `Case` |
+| **API Version** | Default `v59.0` — match your org's API version if needed |
+
+#### Password Grant Flow (Legacy Connected App)
+
+| Field | Description |
+|-------|-------------|
+| **OAuth Flow** | Select "Password Grant (Legacy Connected App)" |
 | **Login URL** | `https://login.salesforce.com` (Production) or `https://test.salesforce.com` (Sandbox) |
 | **Consumer Key** | From your Connected App → OAuth Settings |
 | **Consumer Secret** | From your Connected App → OAuth Settings |
@@ -360,6 +392,17 @@ The **left key** is the Salesforce API field name; the **right value** is the fo
 
 > **Note:** When the target object is `Lead`, `LeadSource` is automatically set to `"Web"` if not mapped.
 
+### Migrating from Password Grant to Client Credentials
+
+If you're currently using the Password Grant flow and want to migrate to the recommended Client Credentials flow:
+
+1. Create a new External Client App in Salesforce Setup
+2. Enable Client Credentials Flow and set a Run As user
+3. Copy the new Consumer Key and Consumer Secret
+4. In WordPress settings, change OAuth Flow to "Client Credentials"
+5. Update the Consumer Key and Consumer Secret
+6. Save settings - username/password fields will be ignored
+
 ### Developer Hooks
 
 ```php
@@ -381,8 +424,9 @@ add_action('ptf_salesforce_record_created', function($sf_id, $form_data, $object
 
 | Problem | Solution |
 |---------|----------|
-| **Authentication failed** | Double-check Consumer Key/Secret and that the Connected App's IP policy is set to *Relax IP Restrictions* |
-| **Invalid password** | Make sure to append the security token directly to the password |
+| **Authentication failed (Client Credentials)** | Make sure your External Client App has Client Credentials Flow enabled and a Run As user is assigned |
+| **Authentication failed (Password Grant)** | Double-check Consumer Key/Secret and that the Connected App's IP policy is set to *Relax IP Restrictions* |
+| **Invalid password** | Make sure to append the security token directly to the password (Password Grant only) |
 | **INVALID_FIELD error** | The mapped Salesforce field name is wrong or doesn't exist on the object |
 | **Required field missing** | Lead requires `LastName` and `Company` — ensure they are mapped |
 | **Sandbox not working** | Set Login URL to `https://test.salesforce.com` |

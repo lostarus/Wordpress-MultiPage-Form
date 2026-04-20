@@ -1370,25 +1370,87 @@ class PTF_Multi_Step_Form {
     }
 
     // -------------------------------------------------------------------
-    // Salesforce Integration
+    // Salesforce Integration (External Client App - Client Credentials Flow)
     // -------------------------------------------------------------------
 
     /**
-     * Get a Salesforce OAuth2 access token (password grant, cached via transient).
+     * Get a Salesforce OAuth2 access token using Client Credentials flow (External Client App).
+     * Falls back to Password Grant flow for backward compatibility.
      *
      * @return array|WP_Error  ['access_token' => string, 'instance_url' => string]
      */
     private function get_salesforce_token() {
-        $cache_key = 'ptf_sf_token_' . md5(
-            $this->get_setting('salesforce_client_id', '') .
-            $this->get_setting('salesforce_username', '')
-        );
+        $auth_flow = $this->get_setting('salesforce_auth_flow', 'client_credentials');
+        $client_id = $this->get_setting('salesforce_client_id', '');
+
+        $cache_key = 'ptf_sf_token_' . md5($client_id . $auth_flow);
 
         $cached = get_transient($cache_key);
         if ($cached) {
             return $cached;
         }
 
+        if ($auth_flow === 'client_credentials') {
+            return $this->get_salesforce_token_client_credentials($cache_key);
+        } else {
+            return $this->get_salesforce_token_password_grant($cache_key);
+        }
+    }
+
+    /**
+     * Get Salesforce token using Client Credentials flow (External Client App - Recommended).
+     *
+     * @param string $cache_key Cache key for transient
+     * @return array|WP_Error
+     */
+    private function get_salesforce_token_client_credentials($cache_key) {
+        $login_url     = rtrim($this->get_setting('salesforce_login_url', 'https://login.salesforce.com'), '/');
+        $client_id     = $this->get_setting('salesforce_client_id', '');
+        $client_secret = $this->get_setting('salesforce_client_secret', '');
+
+        if (empty($client_id) || empty($client_secret)) {
+            return new WP_Error('sf_config', __('Salesforce Client ID and Client Secret are required.', 'pentest-quote-form'));
+        }
+
+        $response = wp_remote_post($login_url . '/services/oauth2/token', array(
+            'timeout' => 30,
+            'body'    => array(
+                'grant_type'    => 'client_credentials',
+                'client_id'     => $client_id,
+                'client_secret' => $client_secret,
+            ),
+        ));
+
+        if (is_wp_error($response)) {
+            return new WP_Error('sf_http', $response->get_error_message());
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+        $code = wp_remote_retrieve_response_code($response);
+
+        if ($code !== 200 || empty($body['access_token'])) {
+            $err_msg = isset($body['error_description']) ? $body['error_description'] : __('Unknown Salesforce auth error. Make sure your External Client App is properly configured.', 'pentest-quote-form');
+            return new WP_Error('sf_auth', $err_msg);
+        }
+
+        $token = array(
+            'access_token' => $body['access_token'],
+            'instance_url' => $body['instance_url'],
+        );
+
+        // Cache for 50 minutes (tokens are valid for ~1-2 hours)
+        set_transient($cache_key, $token, 50 * MINUTE_IN_SECONDS);
+
+        return $token;
+    }
+
+    /**
+     * Get Salesforce token using Password Grant flow (Legacy - Backward Compatibility).
+     *
+     * @param string $cache_key Cache key for transient
+     * @return array|WP_Error
+     */
+    private function get_salesforce_token_password_grant($cache_key) {
         $login_url     = rtrim($this->get_setting('salesforce_login_url', 'https://login.salesforce.com'), '/');
         $client_id     = $this->get_setting('salesforce_client_id', '');
         $client_secret = $this->get_setting('salesforce_client_secret', '');
@@ -1396,7 +1458,7 @@ class PTF_Multi_Step_Form {
         $password      = $this->get_setting('salesforce_password', ''); // password+securitytoken
 
         if (empty($client_id) || empty($client_secret) || empty($username) || empty($password)) {
-            return new WP_Error('sf_config', __('Salesforce credentials are not fully configured.', 'pentest-quote-form'));
+            return new WP_Error('sf_config', __('Salesforce credentials are not fully configured for Password Grant flow.', 'pentest-quote-form'));
         }
 
         $response = wp_remote_post($login_url . '/services/oauth2/token', array(
@@ -1527,10 +1589,9 @@ class PTF_Multi_Step_Form {
 
         if ($code === 401) {
             // Token expired — delete cache and retry once
-            $cache_key = 'ptf_sf_token_' . md5(
-                $this->get_setting('salesforce_client_id', '') .
-                $this->get_setting('salesforce_username', '')
-            );
+            $auth_flow = $this->get_setting('salesforce_auth_flow', 'client_credentials');
+            $client_id = $this->get_setting('salesforce_client_id', '');
+            $cache_key = 'ptf_sf_token_' . md5($client_id . $auth_flow);
             delete_transient($cache_key);
 
             $token_data = $this->get_salesforce_token();

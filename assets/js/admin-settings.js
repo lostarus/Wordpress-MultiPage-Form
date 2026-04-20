@@ -93,6 +93,24 @@
                     $('#custom-font-row').hide();
                 }
             });
+
+            // Salesforce enable/disable toggle
+            $('#enable_salesforce').on('change', function() {
+                if ($(this).is(':checked')) {
+                    $('#salesforce-config-section').show();
+                } else {
+                    $('#salesforce-config-section').hide();
+                }
+            });
+
+            // Salesforce auth flow toggle (show/hide password grant fields)
+            $('#salesforce_auth_flow').on('change', function() {
+                if ($(this).val() === 'password') {
+                    $('#salesforce-password-grant-fields').show();
+                } else {
+                    $('#salesforce-password-grant-fields').hide();
+                }
+            });
         }
 
         /**
