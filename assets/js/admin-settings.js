@@ -112,6 +112,29 @@
                 }
             });
 
+            // Salesforce Login URL type toggle (production/sandbox/custom)
+            $('#salesforce_login_url_type').on('change', function() {
+                const type = $(this).val();
+                const $input = $('#salesforce_login_url');
+                const $help = $('#salesforce_login_url_help');
+
+                if (type === 'production') {
+                    $input.val('https://login.salesforce.com').hide();
+                    $help.html('For Client Credentials flow, you may need to use your My Domain URL instead of the generic login URL.');
+                } else if (type === 'sandbox') {
+                    $input.val('https://test.salesforce.com').hide();
+                    $help.html('For Client Credentials flow, you may need to use your My Domain URL instead of the generic login URL.');
+                } else {
+                    // Custom - show input and clear if it has a generic URL
+                    const currentVal = $input.val();
+                    if (currentVal === 'https://login.salesforce.com' || currentVal === 'https://test.salesforce.com') {
+                        $input.val('');
+                    }
+                    $input.show().focus();
+                    $help.html('Enter your Salesforce My Domain URL. Format: https://yourcompany.my.salesforce.com');
+                }
+            });
+
             // Salesforce test connection
             $('#test-salesforce-btn').on('click', this.testSalesforceConnection.bind(this));
 

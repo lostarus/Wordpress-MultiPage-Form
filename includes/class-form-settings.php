@@ -1561,17 +1561,44 @@ class PTF_Form_Settings {
                             <table class="form-table">
                                 <tr>
                                     <th scope="row">
-                                        <label for="salesforce_login_url"><?php esc_html_e('Login URL', 'pentest-quote-form'); ?></label>
+                                        <label for="salesforce_login_url"><?php esc_html_e('Login URL / My Domain', 'pentest-quote-form'); ?></label>
                                     </th>
                                     <td>
-                                        <select id="salesforce_login_url" name="ptf_settings[salesforce_login_url]">
-                                            <option value="https://login.salesforce.com" <?php selected($settings['salesforce_login_url'] ?? 'https://login.salesforce.com', 'https://login.salesforce.com'); ?>>
-                                                https://login.salesforce.com (<?php esc_html_e('Production', 'pentest-quote-form'); ?>)
+                                        <?php
+                                        $current_url = $settings['salesforce_login_url'] ?? 'https://login.salesforce.com';
+                                        $is_custom = !in_array($current_url, ['https://login.salesforce.com', 'https://test.salesforce.com']);
+                                        ?>
+                                        <select id="salesforce_login_url_type" style="margin-bottom: 10px;">
+                                            <option value="production" <?php echo (!$is_custom && $current_url === 'https://login.salesforce.com') ? 'selected' : ''; ?>>
+                                                <?php esc_html_e('Production (login.salesforce.com)', 'pentest-quote-form'); ?>
                                             </option>
-                                            <option value="https://test.salesforce.com" <?php selected($settings['salesforce_login_url'] ?? 'https://login.salesforce.com', 'https://test.salesforce.com'); ?>>
-                                                https://test.salesforce.com (<?php esc_html_e('Sandbox', 'pentest-quote-form'); ?>)
+                                            <option value="sandbox" <?php echo (!$is_custom && $current_url === 'https://test.salesforce.com') ? 'selected' : ''; ?>>
+                                                <?php esc_html_e('Sandbox (test.salesforce.com)', 'pentest-quote-form'); ?>
+                                            </option>
+                                            <option value="custom" <?php echo $is_custom ? 'selected' : ''; ?>>
+                                                <?php esc_html_e('My Domain (Custom URL) - Required for Client Credentials', 'pentest-quote-form'); ?>
                                             </option>
                                         </select>
+                                        <input type="text"
+                                               id="salesforce_login_url"
+                                               name="ptf_settings[salesforce_login_url]"
+                                               value="<?php echo esc_attr($current_url); ?>"
+                                               class="large-text"
+                                               placeholder="https://yourcompany.my.salesforce.com"
+                                               style="<?php echo !$is_custom ? 'display:none;' : ''; ?>">
+                                        <p class="description" id="salesforce_login_url_help">
+                                            <?php if ($is_custom): ?>
+                                                <?php esc_html_e('Enter your Salesforce My Domain URL. Format: https://yourcompany.my.salesforce.com', 'pentest-quote-form'); ?>
+                                            <?php else: ?>
+                                                <?php esc_html_e('For Client Credentials flow, you may need to use your My Domain URL instead of the generic login URL.', 'pentest-quote-form'); ?>
+                                            <?php endif; ?>
+                                        </p>
+                                        <div style="background: #e7f3ff; border: 1px solid #b8daff; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                                            <strong style="color: #004085;">💡 <?php esc_html_e('Finding Your My Domain URL:', 'pentest-quote-form'); ?></strong><br>
+                                            <small style="color: #004085;">
+                                                <?php esc_html_e('In Salesforce Setup → Search "My Domain" → Copy the URL (e.g., https://yourcompany.my.salesforce.com)', 'pentest-quote-form'); ?>
+                                            </small>
+                                        </div>
                                     </td>
                                 </tr>
                                 <tr>

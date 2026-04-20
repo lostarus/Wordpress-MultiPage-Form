@@ -1431,16 +1431,27 @@ class PTF_Multi_Step_Form {
         $code = wp_remote_retrieve_response_code($response);
 
         if ($code !== 200 || empty($body['access_token'])) {
-            $err_msg = isset($body['error_description']) ? $body['error_description'] : '';
             $error_code = isset($body['error']) ? $body['error'] : '';
+            $error_description = isset($body['error_description']) ? $body['error_description'] : '';
 
-            // Provide helpful error messages for common issues
-            $help_msg = $this->get_client_credentials_error_help($error_code, $err_msg);
+            // Build error message with original Salesforce error
+            $err_msg = '';
 
+            // Show original Salesforce error first
+            if (!empty($error_code) || !empty($error_description)) {
+                $err_msg = sprintf(
+                    __('Salesforce Error: [%s] %s', 'pentest-quote-form'),
+                    $error_code ?: 'unknown',
+                    $error_description ?: __('No description provided', 'pentest-quote-form')
+                );
+            } else {
+                $err_msg = sprintf(__('Salesforce returned HTTP %d with no error details.', 'pentest-quote-form'), $code);
+            }
+
+            // Add helpful tip if we recognize the error
+            $help_msg = $this->get_client_credentials_error_help($error_code, $error_description);
             if (!empty($help_msg)) {
-                $err_msg = $help_msg;
-            } elseif (empty($err_msg)) {
-                $err_msg = __('Unknown Salesforce auth error. Make sure your External Client App is properly configured.', 'pentest-quote-form');
+                $err_msg .= ' — ' . __('Tip:', 'pentest-quote-form') . ' ' . $help_msg;
             }
 
             return new WP_Error('sf_auth', $err_msg);
@@ -1458,35 +1469,42 @@ class PTF_Multi_Step_Form {
     }
 
     /**
-     * Get helpful error messages for Client Credentials flow errors
+     * Get helpful tips for Client Credentials flow errors
      */
     private function get_client_credentials_error_help($error_code, $error_description) {
         $error_description_lower = strtolower($error_description);
 
-        // "request not supported on this domain" or similar
+        // invalid_grant with "this domain" message - most common error
+        // This specifically means Run As user is NOT set, even if domain is correct
+        if ($error_code === 'invalid_grant' && strpos($error_description_lower, 'this domain') !== false) {
+            return __('This error occurs when Run As user is NOT configured. Go to: External Client App Manager → Your App → Manage → Edit Policies → Under "Client Credentials Flow" select a Run As user → Save. The Run As user must have API access.', 'pentest-quote-form');
+        }
+
+        // Generic "not supported on this domain" without invalid_grant
         if (strpos($error_description_lower, 'not supported') !== false ||
             strpos($error_description_lower, 'unsupported') !== false) {
-            return __('Client Credentials flow is not enabled or Run As user not set. In Salesforce Setup: Go to "External Client App Manager" → Find your app → Manage → Edit Policies → Under "Client Credentials Flow" select a Run As user → Save.', 'pentest-quote-form');
+            return __('Use your My Domain URL (https://yourcompany.my.salesforce.com) and ensure Run As user is set.', 'pentest-quote-form');
         }
 
-        // Invalid client credentials
-        if ($error_code === 'invalid_client' || strpos($error_description_lower, 'invalid client') !== false) {
-            return __('Invalid Client ID or Client Secret. In Salesforce Setup: Go to "External Client App Manager" → Click your app → Manage Consumer Details → Copy the correct credentials.', 'pentest-quote-form');
-        }
-
-        // Invalid grant
+        // Invalid grant (other cases)
         if ($error_code === 'invalid_grant') {
-            return __('Invalid grant. Make sure you have assigned a "Run As" user: External Client App Manager → Your App → Manage → Edit Policies → Client Credentials Flow section.', 'pentest-quote-form');
+            return __('Run As user may not be set or may not have proper permissions. Check External Client App Manager → Edit Policies → Client Credentials Flow.', 'pentest-quote-form');
         }
+
+        // Invalid client
+        if ($error_code === 'invalid_client' || strpos($error_description_lower, 'invalid client') !== false) {
+            return __('Check Consumer Key and Consumer Secret in External Client App Manager.', 'pentest-quote-form');
+        }
+
 
         // Unauthorized client
         if ($error_code === 'unauthorized_client') {
-            return __('Unauthorized client. Check that your External Client App has the required OAuth scopes (api, refresh_token) and a Run As user is configured.', 'pentest-quote-form');
+            return __('Check OAuth scopes (api, refresh_token) and Run As user configuration.', 'pentest-quote-form');
         }
 
         // Access denied
         if ($error_code === 'access_denied') {
-            return __('Access denied. Check that: 1) The Run As user has API access and a valid Salesforce license 2) IP Relaxation is set to "Relax IP Restrictions" in Edit Policies.', 'pentest-quote-form');
+            return __('Check Run As user permissions and IP Relaxation settings.', 'pentest-quote-form');
         }
 
         return '';
@@ -1528,7 +1546,20 @@ class PTF_Multi_Step_Form {
         $code = wp_remote_retrieve_response_code($response);
 
         if ($code !== 200 || empty($body['access_token'])) {
-            $err_msg = isset($body['error_description']) ? $body['error_description'] : __('Unknown Salesforce auth error.', 'pentest-quote-form');
+            $error_code = isset($body['error']) ? $body['error'] : '';
+            $error_description = isset($body['error_description']) ? $body['error_description'] : '';
+
+            // Build error message with original Salesforce error
+            if (!empty($error_code) || !empty($error_description)) {
+                $err_msg = sprintf(
+                    __('Salesforce Error: [%s] %s', 'pentest-quote-form'),
+                    $error_code ?: 'unknown',
+                    $error_description ?: __('No description provided', 'pentest-quote-form')
+                );
+            } else {
+                $err_msg = sprintf(__('Salesforce returned HTTP %d with no error details.', 'pentest-quote-form'), $code);
+            }
+
             return new WP_Error('sf_auth', $err_msg);
         }
 
@@ -1669,18 +1700,34 @@ class PTF_Multi_Step_Form {
             return true;
         }
 
-        $error_msg = __('Salesforce API error.', 'pentest-quote-form');
+        // Build detailed error message from Salesforce response
+        $error_msg = sprintf(__('Salesforce API Error (HTTP %d)', 'pentest-quote-form'), $code);
+        $error_details = array();
+
         if (!empty($body) && is_array($body)) {
-            $first = reset($body);
-            if (isset($first['message'])) {
-                $error_msg = $first['message'];
+            // Salesforce returns errors as an array
+            foreach ($body as $err) {
+                if (isset($err['message'])) {
+                    $detail = $err['message'];
+                    if (isset($err['errorCode'])) {
+                        $detail = '[' . $err['errorCode'] . '] ' . $detail;
+                    }
+                    if (isset($err['fields']) && is_array($err['fields'])) {
+                        $detail .= ' (Fields: ' . implode(', ', $err['fields']) . ')';
+                    }
+                    $error_details[] = $detail;
+                }
             }
         }
 
-        // Log error for admin visibility
-        $this->log_salesforce_error($error_msg . ' (HTTP ' . $code . ')', $record);
+        if (!empty($error_details)) {
+            $error_msg .= ': ' . implode(' | ', $error_details);
+        }
 
-        return new WP_Error('sf_api', $error_msg . ' (HTTP ' . $code . ')');
+        // Log error for admin visibility
+        $this->log_salesforce_error($error_msg, $record);
+
+        return new WP_Error('sf_api', $error_msg);
     }
 
     /**

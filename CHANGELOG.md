@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.4] - 2026-04-20
+
+### Improved
+- **Raw Salesforce Errors**: Now displays original Salesforce error messages directly (format: "Salesforce Error: [error_code] error_description")
+- **Detailed API Errors**: API errors now show all details including error codes, messages, and affected field names
+- **Error Display**: Helpful tips are now shown as additions to the original error, not replacements
+- **Simplified Tips**: Tip messages are now shorter since the original Salesforce error provides the main information
+
+### Changed
+- Error messages now prioritize showing what Salesforce actually returned
+- Tips are only added when a known error pattern is detected
+
+## [1.5.3] - 2026-04-20
+
+### Added
+- **My Domain URL Support**: Login URL field now supports custom My Domain URLs (required for Client Credentials flow)
+- **Custom URL Input**: Dropdown to choose between Production, Sandbox, or Custom (My Domain) URL
+- **My Domain Help**: Info box explaining how to find your My Domain URL in Salesforce Setup
+
+### Improved
+- **Error Messages**: "request not supported on this domain" error now explains that My Domain URL is likely needed
+- **Documentation**: Updated with clear My Domain requirements and examples for Client Credentials flow
+- **Sandbox Support**: Updated guidance for sandbox My Domain URLs
+
+### Fixed
+- Client Credentials flow now works correctly with My Domain URLs
+
 ## [1.5.2] - 2026-04-20
 
 ### Improved

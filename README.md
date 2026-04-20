@@ -3,7 +3,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.2%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.5.2-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.4-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
 
 A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, webhook integrations, and full customization options.
 
@@ -396,11 +396,13 @@ This is the modern, secure way to integrate with Salesforce. No username/passwor
 | Field | Description |
 |-------|-------------|
 | **OAuth Flow** | Select "Client Credentials (External Client App - Recommended)" |
-| **Login URL** | `https://login.salesforce.com` (Production) or `https://test.salesforce.com` (Sandbox) |
+| **Login URL / My Domain** | ⚠️ **Use your My Domain URL**: `https://yourcompany.my.salesforce.com` (Find it in Salesforce Setup → My Domain) |
 | **Consumer Key** | From your External Client App → OAuth Settings |
 | **Consumer Secret** | From your External Client App → OAuth Settings |
 | **Salesforce Object** | `Lead` (default), `Contact`, `Account`, `Opportunity`, or `Case` |
 | **API Version** | Default `v59.0` — match your org's API version if needed |
+
+> ⚠️ **Important**: For Client Credentials flow, you should use your **My Domain URL** (e.g., `https://yourcompany.my.salesforce.com`) instead of `login.salesforce.com`. Using the generic login URL often results in "request not supported on this domain" error.
 
 #### Password Grant Flow (Legacy Connected App)
 
@@ -514,14 +516,14 @@ add_action('ptf_salesforce_record_created', function($sf_id, $form_data, $object
 
 | Problem | Solution |
 |---------|----------|
-| **"request not supported on this domain"** | Run As user not configured. Go to **External Client App Manager** → Your App → Manage → Edit Policies → Select a Run As user under "Client Credentials Flow" → Save |
-| **Authentication failed (Client Credentials)** | Make sure your External Client App has Client Credentials Flow enabled AND a Run As user is assigned |
+| **"request not supported on this domain"** | **Most likely cause**: You need to use your My Domain URL. Go to Settings → Select "My Domain (Custom URL)" → Enter `https://yourcompany.my.salesforce.com`. Also ensure Run As user is set in External Client App Manager. |
+| **Authentication failed (Client Credentials)** | 1) Use My Domain URL instead of login.salesforce.com 2) Ensure Run As user is assigned in Edit Policies |
 | **Authentication failed (Password Grant)** | Double-check Consumer Key/Secret and that IP policy is set to *Relax IP Restrictions* |
 | **Invalid client** | Consumer Key or Consumer Secret is wrong. Go to **External Client App Manager** → Your App → Manage Consumer Details |
 | **Invalid password** | Make sure to append the security token directly to the password (Password Grant only) |
 | **INVALID_FIELD error** | The mapped Salesforce field name is wrong or doesn't exist on the object |
 | **Required field missing** | Lead requires `LastName` and `Company` — ensure they are mapped |
-| **Sandbox not working** | Set Login URL to `https://test.salesforce.com` |
+| **Sandbox not working** | Use your Sandbox My Domain URL: `https://yourcompany--sandboxname.sandbox.my.salesforce.com` |
 | **Check Activity Log** | View the Activity Log in WordPress admin for detailed error messages and sent data |
 | **Check WordPress logs** | Errors are also written to the WordPress debug log (`WP_DEBUG_LOG`) with prefix `PTF Salesforce Error:` |
 
