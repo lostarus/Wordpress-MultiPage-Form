@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.1] - 2026-04-20
+
+### Added
+- **Salesforce Test Connection**: New "Test Connection" button to verify Salesforce integration before form submissions
+- **Activity Log**: Real-time activity log showing last 20 Salesforce events (successes and failures)
+- **Error Visibility**: Detailed error messages displayed in admin panel instead of just debug logs
+- **Clear Logs**: Ability to clear Salesforce activity logs from admin panel
+
+### Improved
+- **Error Logging**: All Salesforce errors now logged to database for admin visibility
+- **Success Tracking**: Successful record creations are also logged with Salesforce record IDs
+- **Troubleshooting**: Expandable data view for failed submissions to see what was sent
+
 ## [1.5.0] - 2026-04-20
 
 ### Added

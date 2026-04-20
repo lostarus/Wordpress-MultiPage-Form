@@ -266,6 +266,7 @@ class PTF_Form_Settings {
         wp_localize_script('ptf-admin-settings', 'ptfSettingsAdmin', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('ptf_test_webhooks'),
+            'sfNonce' => wp_create_nonce('ptf_test_salesforce'),
             'i18n' => array(
                 'noWebhooks' => __('No webhooks configured yet.', 'pentest-quote-form'),
                 'name' => __('Name', 'pentest-quote-form'),
@@ -297,6 +298,11 @@ class PTF_Form_Settings {
                 'testResults' => __('Test Results:', 'pentest-quote-form'),
                 'testError' => __('Test failed', 'pentest-quote-form'),
                 'ajaxError' => __('Connection error', 'pentest-quote-form'),
+                'sfTesting' => __('Testing connection...', 'pentest-quote-form'),
+                'sfTestConnection' => __('Test Connection', 'pentest-quote-form'),
+                'sfClearLogs' => __('Clear Logs', 'pentest-quote-form'),
+                'sfLogsCleared' => __('Logs cleared. Refresh the page to see changes.', 'pentest-quote-form'),
+                'sfConfirmClear' => __('Are you sure you want to clear all Salesforce logs?', 'pentest-quote-form'),
             ),
         ));
     }
@@ -1742,6 +1748,83 @@ class PTF_Form_Settings {
                                     ?></span>
                                 <?php endif; ?>
                             </div>
+
+                            <!-- Test Connection Button -->
+                            <?php if ($sf_configured): ?>
+                            <div style="margin-top: 20px;">
+                                <button type="button" id="test-salesforce-btn" class="button button-secondary">
+                                    <span class="dashicons dashicons-yes-alt" style="vertical-align: middle;"></span>
+                                    <?php esc_html_e('Test Connection', 'pentest-quote-form'); ?>
+                                </button>
+                                <span id="salesforce-test-spinner" class="spinner" style="float: none; margin-left: 5px;"></span>
+                                <div id="salesforce-test-result" style="margin-top: 10px;"></div>
+                            </div>
+                            <?php endif; ?>
+
+                            <!-- Activity Log -->
+                            <h4 style="margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #00A1E0; padding-bottom: 5px; color: #00A1E0;">
+                                <span class="dashicons dashicons-media-text" style="vertical-align: middle;"></span>
+                                <?php esc_html_e('Activity Log', 'pentest-quote-form'); ?>
+                            </h4>
+                            <p class="description" style="margin-bottom: 10px;">
+                                <?php esc_html_e('Last 20 Salesforce integration events (newest first)', 'pentest-quote-form'); ?>
+                            </p>
+                            <?php
+                            $sf_logs = PTF_Multi_Step_Form::get_salesforce_logs();
+                            $sf_logs = array_reverse($sf_logs); // Newest first
+                            ?>
+                            <div id="salesforce-logs-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;">
+                                <?php if (empty($sf_logs)): ?>
+                                    <p style="padding: 15px; margin: 0; color: #666; text-align: center;">
+                                        <?php esc_html_e('No activity logs yet. Logs will appear after form submissions or connection tests.', 'pentest-quote-form'); ?>
+                                    </p>
+                                <?php else: ?>
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                        <thead>
+                                            <tr style="background: #e9e9e9;">
+                                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd; width: 150px;"><?php esc_html_e('Time', 'pentest-quote-form'); ?></th>
+                                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd; width: 60px;"><?php esc_html_e('Status', 'pentest-quote-form'); ?></th>
+                                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;"><?php esc_html_e('Message', 'pentest-quote-form'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($sf_logs as $log): ?>
+                                                <?php $is_success = !empty($log['success']); ?>
+                                                <tr style="border-bottom: 1px solid #eee; <?php echo $is_success ? '' : 'background: #fff5f5;'; ?>">
+                                                    <td style="padding: 8px; vertical-align: top; color: #666;">
+                                                        <?php echo esc_html($log['time']); ?>
+                                                    </td>
+                                                    <td style="padding: 8px; vertical-align: top;">
+                                                        <?php if ($is_success): ?>
+                                                            <span style="color: #28a745;">✓</span>
+                                                        <?php else: ?>
+                                                            <span style="color: #dc3545;">✗</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td style="padding: 8px; vertical-align: top;">
+                                                        <?php echo esc_html($log['message']); ?>
+                                                        <?php if (!empty($log['sf_id'])): ?>
+                                                            <br><code style="font-size: 11px;">ID: <?php echo esc_html($log['sf_id']); ?></code>
+                                                        <?php endif; ?>
+                                                        <?php if (!empty($log['data']) && !$is_success): ?>
+                                                            <details style="margin-top: 5px;">
+                                                                <summary style="cursor: pointer; color: #666; font-size: 11px;"><?php esc_html_e('View Data', 'pentest-quote-form'); ?></summary>
+                                                                <pre style="margin: 5px 0; padding: 8px; background: #fff; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; overflow-x: auto; max-height: 150px;"><?php echo esc_html($log['data']); ?></pre>
+                                                            </details>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                <?php endif; ?>
+                            </div>
+                            <?php if (!empty($sf_logs)): ?>
+                                <button type="button" id="clear-salesforce-logs-btn" class="button button-link-delete" style="margin-top: 10px;">
+                                    <span class="dashicons dashicons-trash" style="vertical-align: middle;"></span>
+                                    <?php esc_html_e('Clear Logs', 'pentest-quote-form'); ?>
+                                </button>
+                            <?php endif; ?>
                         </div>
                     </div>
 

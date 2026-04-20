@@ -87,6 +87,8 @@ class PTF_Multi_Step_Form {
         add_action('wp_ajax_ptf_submit_form', array($this, 'handle_form_submission'));
         add_action('wp_ajax_nopriv_ptf_submit_form', array($this, 'handle_form_submission'));
         add_action('wp_ajax_ptf_test_webhooks', array(__CLASS__, 'handle_webhook_test'));
+        add_action('wp_ajax_ptf_test_salesforce', array($this, 'handle_salesforce_test'));
+        add_action('wp_ajax_ptf_clear_salesforce_logs', array($this, 'handle_clear_salesforce_logs'));
         add_action('wp_footer', array($this, 'render_popup_form'));
         add_shortcode('ptf_multistep_form', array($this, 'render_inline_form'));
         add_shortcode('ptf_popup_trigger', array($this, 'render_popup_trigger'));
@@ -1616,6 +1618,7 @@ class PTF_Multi_Step_Form {
         if ($code === 201) {
             // Record created; fire action with the new Salesforce record ID
             $sf_id = isset($body['id']) ? $body['id'] : '';
+            $this->log_salesforce_success('Record created successfully. Object: ' . $sf_object, $sf_id);
             do_action('ptf_salesforce_record_created', $sf_id, $form_data, $sf_object);
             return true;
         }
@@ -1628,7 +1631,175 @@ class PTF_Multi_Step_Form {
             }
         }
 
+        // Log error for admin visibility
+        $this->log_salesforce_error($error_msg . ' (HTTP ' . $code . ')', $record);
+
         return new WP_Error('sf_api', $error_msg . ' (HTTP ' . $code . ')');
+    }
+
+    /**
+     * Log Salesforce errors to database for admin visibility
+     */
+    private function log_salesforce_error($message, $data = array()) {
+        $logs = get_option('ptf_salesforce_logs', array());
+
+        // Keep only last 20 logs
+        if (count($logs) >= 20) {
+            array_shift($logs);
+        }
+
+        $logs[] = array(
+            'time' => current_time('mysql'),
+            'message' => $message,
+            'data' => is_array($data) ? json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) : $data,
+        );
+
+        update_option('ptf_salesforce_logs', $logs);
+
+        // Also log to WordPress debug log
+        error_log('PTF Salesforce Error: ' . $message);
+    }
+
+    /**
+     * Log Salesforce success for admin visibility
+     */
+    private function log_salesforce_success($message, $sf_id = '') {
+        $logs = get_option('ptf_salesforce_logs', array());
+
+        // Keep only last 20 logs
+        if (count($logs) >= 20) {
+            array_shift($logs);
+        }
+
+        $logs[] = array(
+            'time' => current_time('mysql'),
+            'message' => $message,
+            'sf_id' => $sf_id,
+            'success' => true,
+        );
+
+        update_option('ptf_salesforce_logs', $logs);
+    }
+
+    /**
+     * Handle Salesforce test connection AJAX request
+     */
+    public function handle_salesforce_test() {
+        // Security check
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Permission denied.', 'pentest-quote-form')));
+            return;
+        }
+
+        check_ajax_referer('ptf_test_salesforce', 'nonce');
+
+        // Test token acquisition
+        $token_data = $this->get_salesforce_token();
+
+        if (is_wp_error($token_data)) {
+            $error_msg = $token_data->get_error_message();
+            $this->log_salesforce_error('Connection test failed: ' . $error_msg);
+            wp_send_json_error(array(
+                'message' => $error_msg,
+                'step' => 'authentication',
+            ));
+            return;
+        }
+
+        // Test API access by describing the target object
+        $sf_object = $this->get_setting('salesforce_object', 'Lead');
+        $api_version = $this->get_setting('salesforce_api_version', 'v59.0');
+        $instance_url = $token_data['instance_url'];
+        $access_token = $token_data['access_token'];
+
+        $describe_url = $instance_url . '/services/data/' . $api_version . '/sobjects/' . rawurlencode($sf_object) . '/describe/';
+
+        $response = wp_remote_get($describe_url, array(
+            'timeout' => 30,
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $access_token,
+                'Content-Type'  => 'application/json',
+            ),
+        ));
+
+        if (is_wp_error($response)) {
+            $error_msg = $response->get_error_message();
+            $this->log_salesforce_error('API test failed: ' . $error_msg);
+            wp_send_json_error(array(
+                'message' => $error_msg,
+                'step' => 'api_access',
+            ));
+            return;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if ($code !== 200) {
+            $error_msg = isset($body['message']) ? $body['message'] : __('Failed to access Salesforce API.', 'pentest-quote-form');
+            if (is_array($body) && isset($body[0]['message'])) {
+                $error_msg = $body[0]['message'];
+            }
+            $this->log_salesforce_error('API test failed: ' . $error_msg . ' (HTTP ' . $code . ')');
+            wp_send_json_error(array(
+                'message' => $error_msg . ' (HTTP ' . $code . ')',
+                'step' => 'api_access',
+            ));
+            return;
+        }
+
+        // Get field names from the object
+        $fields = array();
+        if (isset($body['fields']) && is_array($body['fields'])) {
+            foreach ($body['fields'] as $field) {
+                if ($field['createable']) {
+                    $fields[] = array(
+                        'name' => $field['name'],
+                        'label' => $field['label'],
+                        'type' => $field['type'],
+                        'required' => !$field['nillable'] && !$field['defaultedOnCreate'],
+                    );
+                }
+            }
+        }
+
+        // Log success
+        $this->log_salesforce_success('Connection test successful. Object: ' . $sf_object . ', Instance: ' . $instance_url);
+
+        wp_send_json_success(array(
+            'message' => sprintf(
+                __('Successfully connected to Salesforce! Instance: %s, Object: %s', 'pentest-quote-form'),
+                parse_url($instance_url, PHP_URL_HOST),
+                $sf_object
+            ),
+            'instance_url' => $instance_url,
+            'object' => $sf_object,
+            'fields' => array_slice($fields, 0, 50), // Return first 50 fields
+            'total_fields' => count($fields),
+        ));
+    }
+
+    /**
+     * Handle clear Salesforce logs AJAX request
+     */
+    public function handle_clear_salesforce_logs() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Permission denied.', 'pentest-quote-form')));
+            return;
+        }
+
+        check_ajax_referer('ptf_test_salesforce', 'nonce');
+
+        delete_option('ptf_salesforce_logs');
+
+        wp_send_json_success(array('message' => __('Logs cleared successfully.', 'pentest-quote-form')));
+    }
+
+    /**
+     * Get Salesforce logs for admin display
+     */
+    public static function get_salesforce_logs() {
+        return get_option('ptf_salesforce_logs', array());
     }
 
     private function get_user_ip() {

@@ -3,7 +3,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.2%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.4.1-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.1-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
 
 A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, webhook integrations, and full customization options.
 
@@ -38,7 +38,9 @@ A professional WordPress plugin for cybersecurity penetration test quote request
 | 🎯 **Popup & Inline** | Both popup and embedded form support |
 | 📝 **Dynamic Questions** | Category-based question management |
 | 🔗 **Webhook/API** | Power Automate, Zapier, Make integrations |
-| ☁️ **Salesforce** | Direct Salesforce Lead/Contact/Opportunity creation via REST API |
+| ☁️ **Salesforce** | Direct Salesforce Lead/Contact/Opportunity creation (External Client App + Legacy support) |
+| 🧪 **Connection Testing** | Test Salesforce connection before going live |
+| 📋 **Activity Log** | Track Salesforce submissions with success/error logs |
 | 🛡️ **reCAPTCHA v3** | Google reCAPTCHA bot protection |
 | 📧 **Email Notifications** | Automatic notifications and auto-reply |
 | 📊 **CSV Export** | Export submissions to CSV |
@@ -314,23 +316,52 @@ An access token is cached for 50 minutes and automatically refreshed when it exp
 
 #### Option 1: External Client App (Recommended)
 
-1. A Salesforce org (Production or Sandbox)
-2. An **External Client App** with Client Credentials enabled ([How to create one](https://help.salesforce.com/s/articleView?id=sf.connected_app_client_credentials_setup.htm))
-   - Go to **Setup → Apps → App Manager → New Connected App**
-   - Enable OAuth Settings
+This is the modern, secure way to integrate with Salesforce. No username/password required.
+
+**Step-by-Step Setup in Salesforce:**
+
+1. Log in to your Salesforce org
+2. Go to **Setup** (gear icon → Setup)
+3. Search for **App Manager** in Quick Find
+4. Click **New Connected App** (or **New External Client App** in newer orgs)
+5. Fill in basic information:
+   - **Connected App Name**: `WordPress Form Integration`
+   - **API Name**: `WordPress_Form_Integration`
+   - **Contact Email**: Your email address
+6. Under **API (Enable OAuth Settings)**:
+   - Check **Enable OAuth Settings**
+   - **Callback URL**: `https://yoursite.com` (any valid URL)
    - Check **Enable Client Credentials Flow**
-   - Add required OAuth Scopes: **api**, **refresh_token**
-   - Assign a **Run As** user (the user context for API calls)
-3. Your **Consumer Key** (Client ID) and **Consumer Secret**
+   - **Selected OAuth Scopes**: Add these:
+     - `Access the identity URL service (id, profile, email, address, phone)`
+     - `Manage user data via APIs (api)`
+     - `Perform requests at any time (refresh_token, offline_access)`
+7. Click **Save** and wait 2-10 minutes for activation
+8. After activation, click **Manage Consumer Details**:
+   - Verify your identity
+   - Copy the **Consumer Key** and **Consumer Secret**
+9. **Important - Set Run As User**:
+   - Go to **Setup → Apps → Connected Apps → Manage Connected Apps**
+   - Find your app and click **Edit Policies**
+   - Under **Client Credentials Flow**, select a **Run As** user
+   - This user's permissions will be used for API calls
+
+**Required from Salesforce:**
+- Consumer Key (Client ID)
+- Consumer Secret
 
 #### Option 2: Connected App with Password Grant (Legacy)
+
+⚠️ **Deprecated**: Salesforce is phasing out the Password Grant flow. Use Client Credentials if possible.
 
 1. A Salesforce org (Production or Sandbox)
 2. A **Connected App** with OAuth enabled ([How to create one](https://help.salesforce.com/s/articleView?id=sf.connected_app_create.htm))
    - Enable OAuth Settings → check **Enable OAuth**
    - Add any Callback URL (e.g. `https://yoursite.com`)
    - Scopes: **api**, **refresh_token**
+   - Important: Set IP policy to **Relax IP Restrictions** under Manage Connected Apps
 3. Your Salesforce **username**, **password**, and **security token**
+   - Get security token: Setup → Reset My Security Token
 
 ### Setup
 
@@ -403,6 +434,44 @@ If you're currently using the Password Grant flow and want to migrate to the rec
 5. Update the Consumer Key and Consumer Secret
 6. Save settings - username/password fields will be ignored
 
+### Testing Your Connection
+
+After configuring your Salesforce credentials:
+
+1. Click the **Test Connection** button in the Salesforce settings section
+2. The plugin will attempt to:
+   - Authenticate with Salesforce using your credentials
+   - Access the Salesforce REST API
+   - Describe the target object (Lead, Contact, etc.)
+3. On success, you'll see:
+   - ✅ Instance URL confirmation
+   - Number of available fields
+   - List of required fields for the object
+4. On failure, you'll see:
+   - ❌ Which step failed (Authentication or API Access)
+   - Detailed error message for troubleshooting
+
+### Activity Log
+
+The plugin maintains an activity log of the last 20 Salesforce events:
+
+| Log Entry | Description |
+|-----------|-------------|
+| ✓ Success | Record created with Salesforce ID |
+| ✗ Error | Failed submission with error message |
+
+**Features:**
+- View timestamp for each event
+- See Salesforce record IDs for successful submissions
+- Expand "View Data" on errors to see the exact JSON that was sent
+- Clear logs with one click
+
+This helps you:
+- Verify that submissions are reaching Salesforce
+- Debug field mapping issues
+- Identify authentication problems
+- Track integration health over time
+
 ### Developer Hooks
 
 ```php
@@ -430,7 +499,8 @@ add_action('ptf_salesforce_record_created', function($sf_id, $form_data, $object
 | **INVALID_FIELD error** | The mapped Salesforce field name is wrong or doesn't exist on the object |
 | **Required field missing** | Lead requires `LastName` and `Company` — ensure they are mapped |
 | **Sandbox not working** | Set Login URL to `https://test.salesforce.com` |
-| Check logs | Errors are written to the WordPress debug log (`WP_DEBUG_LOG`) with prefix `PTF Salesforce Error:` |
+| **Check Activity Log** | View the Activity Log in WordPress admin for detailed error messages and sent data |
+| **Check WordPress logs** | Errors are also written to the WordPress debug log (`WP_DEBUG_LOG`) with prefix `PTF Salesforce Error:` |
 
 ---
 

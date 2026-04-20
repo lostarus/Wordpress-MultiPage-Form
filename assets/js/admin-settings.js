@@ -111,6 +111,102 @@
                     $('#salesforce-password-grant-fields').hide();
                 }
             });
+
+            // Salesforce test connection
+            $('#test-salesforce-btn').on('click', this.testSalesforceConnection.bind(this));
+
+            // Clear Salesforce logs
+            $('#clear-salesforce-logs-btn').on('click', this.clearSalesforceLogs.bind(this));
+        }
+
+        /**
+         * Test Salesforce connection
+         */
+        testSalesforceConnection() {
+            const $btn = $('#test-salesforce-btn');
+            const $spinner = $('#salesforce-test-spinner');
+            const $result = $('#salesforce-test-result');
+            const sfNonce = typeof ptfSettingsAdmin !== 'undefined' ? ptfSettingsAdmin.sfNonce : '';
+
+            $btn.prop('disabled', true);
+            $spinner.addClass('is-active');
+            $result.html('');
+
+            $.ajax({
+                url: ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'ptf_test_salesforce',
+                    nonce: sfNonce
+                },
+                success: (response) => {
+                    $btn.prop('disabled', false);
+                    $spinner.removeClass('is-active');
+
+                    if (response.success) {
+                        let html = `<div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 4px;">
+                            <strong style="color: #155724;">✅ ${this.escapeHtml(response.data.message)}</strong>`;
+
+                        if (response.data.total_fields) {
+                            html += `<br><small style="color: #155724;">Available fields: ${response.data.total_fields}</small>`;
+                        }
+
+                        // Show some field names
+                        if (response.data.fields && response.data.fields.length > 0) {
+                            const requiredFields = response.data.fields.filter(f => f.required).map(f => f.name);
+                            if (requiredFields.length > 0) {
+                                html += `<br><small style="color: #856404;">⚠️ Required fields: ${requiredFields.join(', ')}</small>`;
+                            }
+                        }
+
+                        html += `</div>`;
+                        $result.html(html);
+                    } else {
+                        let stepInfo = response.data.step === 'authentication'
+                            ? 'Authentication failed'
+                            : 'API access failed';
+                        $result.html(`<div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 4px;">
+                            <strong style="color: #721c24;">❌ ${stepInfo}</strong><br>
+                            <span style="color: #721c24;">${this.escapeHtml(response.data.message)}</span>
+                        </div>`);
+                    }
+                },
+                error: () => {
+                    $btn.prop('disabled', false);
+                    $spinner.removeClass('is-active');
+                    $result.html(`<div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 4px;">
+                        <strong style="color: #721c24;">❌ ${i18n.ajaxError || 'Connection error'}</strong>
+                    </div>`);
+                }
+            });
+        }
+
+        /**
+         * Clear Salesforce logs
+         */
+        clearSalesforceLogs() {
+            if (!confirm(i18n.sfConfirmClear || 'Are you sure you want to clear all Salesforce logs?')) {
+                return;
+            }
+
+            const sfNonce = typeof ptfSettingsAdmin !== 'undefined' ? ptfSettingsAdmin.sfNonce : '';
+
+            $.ajax({
+                url: ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'ptf_clear_salesforce_logs',
+                    nonce: sfNonce
+                },
+                success: (response) => {
+                    if (response.success) {
+                        $('#salesforce-logs-container').html(`<p style="padding: 15px; margin: 0; color: #666; text-align: center;">
+                            ${i18n.sfLogsCleared || 'Logs cleared. Refresh the page to see changes.'}
+                        </p>`);
+                        $('#clear-salesforce-logs-btn').hide();
+                    }
+                }
+            });
         }
 
         /**
