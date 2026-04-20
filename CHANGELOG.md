@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.5] - 2026-04-20
+
+### Fixed
+- **OAuth Token Request**: Added `Content-Type: application/x-www-form-urlencoded` header to Salesforce OAuth token requests (required for Client Credentials flow)
+- **Custom URL Saving**: Custom My Domain URLs now properly saved and persist after page reload
+- **Client Credentials Flow**: Now works correctly with My Domain URLs
+
 ## [1.5.4] - 2026-04-20
 
 ### Improved

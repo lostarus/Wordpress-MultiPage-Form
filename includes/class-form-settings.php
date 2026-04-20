@@ -404,9 +404,15 @@ class PTF_Form_Settings {
         // Salesforce direct integration
         $sanitized['enable_salesforce'] = isset($input['enable_salesforce']) ? '1' : '0';
 
-        $allowed_sf_login_urls = array('https://login.salesforce.com', 'https://test.salesforce.com');
+        // Salesforce Login URL - allow custom My Domain URLs
         $sf_login_url = isset($input['salesforce_login_url']) ? esc_url_raw(trim($input['salesforce_login_url'])) : 'https://login.salesforce.com';
-        $sanitized['salesforce_login_url'] = in_array($sf_login_url, $allowed_sf_login_urls) ? $sf_login_url : 'https://login.salesforce.com';
+        // Validate that it's a valid Salesforce URL (must be https and contain salesforce)
+        if (!empty($sf_login_url) && strpos($sf_login_url, 'https://') === 0 &&
+            (strpos($sf_login_url, 'salesforce.com') !== false || strpos($sf_login_url, 'force.com') !== false)) {
+            $sanitized['salesforce_login_url'] = rtrim($sf_login_url, '/'); // Remove trailing slash
+        } else {
+            $sanitized['salesforce_login_url'] = 'https://login.salesforce.com';
+        }
 
         $sanitized['salesforce_client_id']     = isset($input['salesforce_client_id'])     ? sanitize_text_field($input['salesforce_client_id'])     : '';
         $sanitized['salesforce_client_secret'] = isset($input['salesforce_client_secret']) ? sanitize_text_field($input['salesforce_client_secret']) : '';

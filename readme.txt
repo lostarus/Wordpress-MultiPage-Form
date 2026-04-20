@@ -4,7 +4,7 @@ Tags: form, quote, cybersecurity, multi-step form, popup form, pentest, salesfor
 Requires at least: 5.0
 Tested up to: 6.4
 Requires PHP: 7.2
-Stable tag: 1.5.4
+Stable tag: 1.5.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,6 +34,11 @@ Pentest Quote Form is a professional WordPress plugin specially designed for cyb
 3. Configure from the settings page
 
 == Changelog ==
+
+= 1.5.5 =
+* Fixed: Added Content-Type header (application/x-www-form-urlencoded) to Salesforce OAuth token requests
+* Fixed: Custom My Domain URLs now properly saved (was resetting to default)
+* Fixed: Salesforce Client Credentials flow now works correctly with My Domain URLs
 
 = 1.5.4 =
 * Improved: Now shows original Salesforce error messages directly (e.g., "Salesforce Error: [error_code] error_description")

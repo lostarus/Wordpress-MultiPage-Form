@@ -1416,6 +1416,9 @@ class PTF_Multi_Step_Form {
 
         $response = wp_remote_post($login_url . '/services/oauth2/token', array(
             'timeout' => 30,
+            'headers' => array(
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ),
             'body'    => array(
                 'grant_type'    => 'client_credentials',
                 'client_id'     => $client_id,
@@ -1529,6 +1532,9 @@ class PTF_Multi_Step_Form {
 
         $response = wp_remote_post($login_url . '/services/oauth2/token', array(
             'timeout' => 30,
+            'headers' => array(
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ),
             'body'    => array(
                 'grant_type'    => 'password',
                 'client_id'     => $client_id,
