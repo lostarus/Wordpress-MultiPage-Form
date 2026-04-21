@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.7] - 2026-04-21
+
+### Added
+- **Form Fields Reference Box**: Interactive collapsible box showing all available form fields for Salesforce mapping
+- **Click-to-Copy**: Click any field name to copy it to clipboard for easy mapping
+- **Sample JSON Preview**: Shows what an actual form submission looks like with real field values
+- **Dynamic Question Fields**: All custom question fields from categories are now listed automatically
+
+### Improved
+- **Salesforce Mapping UX**: Much easier to see which form fields are available when configuring field mapping
+- **Field Descriptions**: Hover over field names to see what they contain
+
+## [1.5.6] - 2026-04-21
+
+### Fixed
+- **Field Mapping Persistence**: Salesforce field mapping JSON now properly persists after page reload
+- **JSON Parsing**: Improved JSON parsing using `wp_unslash()` for better WordPress compatibility
+- **Settings Loading**: Field mapping now reads directly from database to avoid `wp_parse_args` shallow merge issues
+
 ## [1.5.5] - 2026-04-20
 
 ### Fixed

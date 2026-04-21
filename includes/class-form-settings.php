@@ -427,18 +427,36 @@ class PTF_Form_Settings {
         $sanitized['salesforce_api_version'] = isset($input['salesforce_api_version']) ? sanitize_text_field($input['salesforce_api_version']) : 'v59.0';
 
         // Salesforce field mapping (JSON textarea → associative array)
-        if (isset($input['salesforce_field_mapping_json']) && !empty($input['salesforce_field_mapping_json'])) {
-            $sf_mapping = json_decode(stripslashes($input['salesforce_field_mapping_json']), true);
-            if (is_array($sf_mapping)) {
+        if (isset($input['salesforce_field_mapping_json']) && !empty(trim($input['salesforce_field_mapping_json']))) {
+            $json_input = $input['salesforce_field_mapping_json'];
+            // Remove any WordPress slashes
+            $json_input = wp_unslash($json_input);
+            // Attempt JSON decode
+            $sf_mapping = json_decode($json_input, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($sf_mapping) && !empty($sf_mapping)) {
                 $sanitized_mapping = array();
                 foreach ($sf_mapping as $sf_field => $form_field) {
-                    $sanitized_mapping[sanitize_text_field($sf_field)] = sanitize_text_field($form_field);
+                    $key = sanitize_text_field($sf_field);
+                    $value = sanitize_text_field($form_field);
+                    if (!empty($key) && !empty($value)) {
+                        $sanitized_mapping[$key] = $value;
+                    }
                 }
-                $sanitized['salesforce_field_mapping'] = $sanitized_mapping;
+                if (!empty($sanitized_mapping)) {
+                    $sanitized['salesforce_field_mapping'] = $sanitized_mapping;
+                } else {
+                    // Keep existing if sanitization resulted in empty
+                    $current = get_option('ptf_settings', array());
+                    $sanitized['salesforce_field_mapping'] = isset($current['salesforce_field_mapping']) ? $current['salesforce_field_mapping'] : array();
+                }
             } else {
-                $sanitized['salesforce_field_mapping'] = array();
+                // Invalid JSON - keep existing mapping
+                $current = get_option('ptf_settings', array());
+                $sanitized['salesforce_field_mapping'] = isset($current['salesforce_field_mapping']) ? $current['salesforce_field_mapping'] : array();
             }
         } else {
+            // Empty input - keep existing mapping
             $current = get_option('ptf_settings', array());
             $sanitized['salesforce_field_mapping'] = isset($current['salesforce_field_mapping']) ? $current['salesforce_field_mapping'] : array();
         }
@@ -1725,14 +1743,154 @@ class PTF_Form_Settings {
                             <p class="description" style="margin-bottom: 12px;">
                                 <?php esc_html_e('Map Salesforce API field names to form field names. Edit the JSON below.', 'pentest-quote-form'); ?>
                             </p>
+
+                            <!-- Available Form Fields Reference Box -->
                             <?php
-                            $sf_mapping = $settings['salesforce_field_mapping'] ?? array(
+                            // Collect all available form fields
+                            $available_fields = array(
+                                // Static fields
+                                'first_name' => __('Contact Person Name', 'pentest-quote-form'),
+                                'email' => __('Email Address', 'pentest-quote-form'),
+                                'phone' => __('Phone Number', 'pentest-quote-form'),
+                                'company' => __('Company Name', 'pentest-quote-form'),
+                                'test_types_text' => __('Selected Test Types (comma-separated text)', 'pentest-quote-form'),
+                                'submitted_at' => __('Submission Date/Time', 'pentest-quote-form'),
+                                'page_url' => __('Page URL where form was submitted', 'pentest-quote-form'),
+                                'kvkk_consent' => __('Privacy Consent (1 or 0)', 'pentest-quote-form'),
+                            );
+
+                            // Get dynamic question fields from categories
+                            $categories = PTF_Form_Questions::get_categories();
+                            if (!empty($categories)) {
+                                foreach ($categories as $category) {
+                                    if (!empty($category['questions'])) {
+                                        foreach ($category['questions'] as $question) {
+                                            if (!empty($question['id'])) {
+                                                $field_key = sanitize_key($question['id']);
+                                                $field_label = !empty($question['question']) ? $question['question'] : $field_key;
+                                                $category_name = !empty($category['name']) ? $category['name'] : '';
+                                                $available_fields[$field_key] = $field_label . ($category_name ? ' (' . $category_name . ')' : '');
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Build sample JSON for user reference
+                            $sample_form_data = array();
+                            foreach ($available_fields as $key => $desc) {
+                                $sample_form_data[$key] = '(value)';
+                            }
+                            ?>
+                            <div style="background: #f0f6fc; border: 1px solid #c8ddf0; border-radius: 4px; padding: 15px; margin-bottom: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <strong style="color: #0366d6;">
+                                        <span class="dashicons dashicons-info-outline" style="vertical-align: middle;"></span>
+                                        <?php esc_html_e('Available Form Fields', 'pentest-quote-form'); ?>
+                                    </strong>
+                                    <button type="button" class="button button-small" onclick="toggleFormFieldsReference()" id="toggle-fields-btn">
+                                        <span class="dashicons dashicons-arrow-down-alt2" style="vertical-align: middle;"></span>
+                                        <?php esc_html_e('Show/Hide', 'pentest-quote-form'); ?>
+                                    </button>
+                                </div>
+                                <div id="form-fields-reference" style="display: none;">
+                                    <p style="margin: 0 0 10px 0; font-size: 12px; color: #586069;">
+                                        <?php esc_html_e('Use these field names on the RIGHT side of your mapping (form field values):', 'pentest-quote-form'); ?>
+                                    </p>
+
+                                    <!-- Static Fields -->
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="font-size: 11px; color: #24292e; text-transform: uppercase;"><?php esc_html_e('Static Fields', 'pentest-quote-form'); ?></strong>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+                                            <?php
+                                            $static_fields = array('first_name', 'email', 'phone', 'company', 'test_types_text', 'submitted_at', 'page_url', 'kvkk_consent');
+                                            foreach ($static_fields as $field):
+                                            ?>
+                                                <span style="background: #fff; border: 1px solid #d1d5da; border-radius: 3px; padding: 3px 8px; font-size: 11px; cursor: pointer;"
+                                                      onclick="copyFieldName('<?php echo esc_attr($field); ?>')"
+                                                      title="<?php echo esc_attr($available_fields[$field] ?? $field); ?> - <?php esc_attr_e('Click to copy', 'pentest-quote-form'); ?>">
+                                                    <code style="background: none; padding: 0; font-size: 11px;"><?php echo esc_html($field); ?></code>
+                                                </span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+
+                                    <?php if (count($available_fields) > count($static_fields)): ?>
+                                    <!-- Dynamic Question Fields -->
+                                    <div style="margin-bottom: 12px;">
+                                        <strong style="font-size: 11px; color: #24292e; text-transform: uppercase;"><?php esc_html_e('Dynamic Question Fields', 'pentest-quote-form'); ?></strong>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
+                                            <?php
+                                            foreach ($available_fields as $field => $desc):
+                                                if (in_array($field, $static_fields)) continue;
+                                            ?>
+                                                <span style="background: #fff; border: 1px solid #d1d5da; border-radius: 3px; padding: 3px 8px; font-size: 11px; cursor: pointer;"
+                                                      onclick="copyFieldName('<?php echo esc_attr($field); ?>')"
+                                                      title="<?php echo esc_attr($desc); ?> - <?php esc_attr_e('Click to copy', 'pentest-quote-form'); ?>">
+                                                    <code style="background: none; padding: 0; font-size: 11px;"><?php echo esc_html($field); ?></code>
+                                                </span>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </div>
+                                    <?php endif; ?>
+
+                                    <!-- Sample JSON Preview -->
+                                    <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #d1d5da;">
+                                        <strong style="font-size: 11px; color: #24292e; text-transform: uppercase;"><?php esc_html_e('Sample Form Submission JSON', 'pentest-quote-form'); ?></strong>
+                                        <p style="margin: 5px 0; font-size: 11px; color: #586069;">
+                                            <?php esc_html_e('This is what a form submission looks like - use these keys for your mapping:', 'pentest-quote-form'); ?>
+                                        </p>
+                                        <pre style="background: #fff; border: 1px solid #d1d5da; border-radius: 3px; padding: 10px; margin: 8px 0 0 0; font-size: 10px; max-height: 200px; overflow-y: auto;"><?php
+                                            $sample_output = array(
+                                                'first_name' => 'John Smith',
+                                                'email' => 'john@company.com',
+                                                'phone' => '+1 555 123 4567',
+                                                'company' => 'ACME Corporation',
+                                                'test_types_text' => 'Web Application, API Security, Internal Network',
+                                                'submitted_at' => date('Y-m-d H:i:s'),
+                                                'page_url' => home_url('/contact'),
+                                                'kvkk_consent' => '1',
+                                            );
+                                            // Add dynamic fields to sample
+                                            foreach ($available_fields as $field => $desc) {
+                                                if (!isset($sample_output[$field])) {
+                                                    $sample_output[$field] = '(user answer)';
+                                                }
+                                            }
+                                            echo esc_html(json_encode($sample_output, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+                                        ?></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            <script>
+                            function toggleFormFieldsReference() {
+                                var el = document.getElementById('form-fields-reference');
+                                el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                            }
+                            function copyFieldName(fieldName) {
+                                navigator.clipboard.writeText(fieldName).then(function() {
+                                    // Show brief feedback
+                                    var btn = event.target.closest('span');
+                                    var originalBg = btn.style.background;
+                                    btn.style.background = '#d4edda';
+                                    setTimeout(function() { btn.style.background = originalBg; }, 300);
+                                });
+                            }
+                            </script>
+
+                            <?php
+                            // Get raw settings from database to ensure we get the saved mapping
+                            $raw_settings = get_option('ptf_settings', array());
+                            $default_sf_mapping = array(
                                 'Company'     => 'company',
                                 'LastName'    => 'first_name',
                                 'Email'       => 'email',
                                 'Phone'       => 'phone',
                                 'Description' => 'test_types_text',
                             );
+                            $sf_mapping = isset($raw_settings['salesforce_field_mapping']) && is_array($raw_settings['salesforce_field_mapping']) && !empty($raw_settings['salesforce_field_mapping'])
+                                ? $raw_settings['salesforce_field_mapping']
+                                : $default_sf_mapping;
                             ?>
                             <textarea id="salesforce_field_mapping_json"
                                       name="ptf_settings[salesforce_field_mapping_json]"
@@ -1740,10 +1898,7 @@ class PTF_Form_Settings {
                                       class="large-text code"
                                       style="font-family: monospace; font-size: 12px;"><?php echo esc_textarea(json_encode($sf_mapping, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea>
                             <p class="description">
-                                <?php esc_html_e('Available form fields:', 'pentest-quote-form'); ?>
-                                <code>first_name</code>, <code>email</code>, <code>phone</code>, <code>company</code>,
-                                <code>test_types_text</code> (<?php esc_html_e('readable test type list', 'pentest-quote-form'); ?>),
-                                <code>submitted_at</code>, <code>page_url</code>
+                                <?php esc_html_e('Format: { "SalesforceField": "form_field" }. Click "Show/Hide" above to see all available form fields.', 'pentest-quote-form'); ?>
                             </p>
 
                             <!-- Status indicator -->
