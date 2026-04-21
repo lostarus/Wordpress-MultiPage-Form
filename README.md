@@ -3,7 +3,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.2%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.5.7-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.8-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
 [![Tested up to](https://img.shields.io/badge/Tested%20up%20to-WP%206.4-brightgreen.svg)](https://wordpress.org/)
 
 A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, Salesforce integration, webhook/API integrations, and full customization options.

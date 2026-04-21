@@ -350,8 +350,15 @@
             // Show loading
             this.showLoading(true);
 
-            // If reCAPTCHA is enabled, get token
-            if (ptfForm.recaptcha && ptfForm.recaptcha.enabled && typeof grecaptcha !== 'undefined') {
+            // Check if reCAPTCHA should be used
+            const recaptchaEnabled = ptfForm.recaptcha &&
+                                     ptfForm.recaptcha.enabled === true &&
+                                     ptfForm.recaptcha.siteKey &&
+                                     ptfForm.recaptcha.siteKey.length > 0 &&
+                                     typeof grecaptcha !== 'undefined';
+
+            // If reCAPTCHA is enabled and configured, get token
+            if (recaptchaEnabled) {
                 try {
                     grecaptcha.ready(() => {
                         try {
@@ -380,7 +387,7 @@
                     this.showError(ptfForm.messages.recaptcha_error || 'reCAPTCHA failed to initialize.');
                 }
             } else {
-                // Submit directly if no reCAPTCHA
+                // Submit directly if reCAPTCHA is not configured or not enabled
                 this.sendFormData('');
             }
         }
