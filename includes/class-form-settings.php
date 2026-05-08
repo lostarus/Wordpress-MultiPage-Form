@@ -1754,6 +1754,8 @@ class PTF_Form_Settings {
                                 'phone' => __('Phone Number', 'pentest-quote-form'),
                                 'company' => __('Company Name', 'pentest-quote-form'),
                                 'test_types_text' => __('Selected Test Types (comma-separated text)', 'pentest-quote-form'),
+                                'target_scope_text' => __('All Answers (full question-answer details as text)', 'pentest-quote-form'),
+                                'answers_json' => __('All Answers (structured JSON format)', 'pentest-quote-form'),
                                 'submitted_at' => __('Submission Date/Time', 'pentest-quote-form'),
                                 'page_url' => __('Page URL where form was submitted', 'pentest-quote-form'),
                                 'kvkk_consent' => __('Privacy Consent (1 or 0)', 'pentest-quote-form'),
@@ -1803,7 +1805,7 @@ class PTF_Form_Settings {
                                         <strong style="font-size: 11px; color: #24292e; text-transform: uppercase;"><?php esc_html_e('Static Fields', 'pentest-quote-form'); ?></strong>
                                         <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
                                             <?php
-                                            $static_fields = array('first_name', 'email', 'phone', 'company', 'test_types_text', 'submitted_at', 'page_url', 'kvkk_consent');
+                                            $static_fields = array('first_name', 'email', 'phone', 'company', 'test_types_text', 'target_scope_text', 'answers_json', 'submitted_at', 'page_url', 'kvkk_consent');
                                             foreach ($static_fields as $field):
                                             ?>
                                                 <span style="background: #fff; border: 1px solid #d1d5da; border-radius: 3px; padding: 3px 8px; font-size: 11px; cursor: pointer;"

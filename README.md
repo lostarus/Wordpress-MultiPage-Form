@@ -464,11 +464,127 @@ The **left key** is the Salesforce API field name; the **right value** is the fo
 | `phone` | Phone number |
 | `company` | Company name |
 | `test_types_text` | Readable list of selected test types (comma-separated) |
+| `target_scope_text` | All question-answers as readable plain text |
+| `answers_json` | All question-answers as structured JSON |
 | `submitted_at` | Submission date/time |
 | `page_url` | URL of the page where the form was submitted |
-| *(dynamic question IDs)* | Any custom question field key |
+| `kvkk_consent` | Privacy consent status (1 or 0) |
+| *(dynamic question IDs)* | Any custom question field key (visible in admin "Available Form Fields" box) |
 
 > **Note:** When the target object is `Lead`, `LeadSource` is automatically set to `"Web"` if not mapped.
+>
+> **Tip:** Click "Show/Hide" under **Available Form Fields** in the admin panel to see all available field names including dynamic question IDs.
+
+### Field Mapping Scenarios
+
+Below are common mapping configurations for different use cases.
+
+#### Scenario 1: Basic Lead (default)
+
+Send contact info and selected test types:
+
+```json
+{
+  "Company":     "company",
+  "LastName":    "first_name",
+  "Email":       "email",
+  "Phone":       "phone",
+  "Description": "test_types_text"
+}
+```
+
+`Description` will contain: `Web Application Penetration Test, API Security Test`
+
+#### Scenario 2: Full Answers as Plain Text
+
+Send all question-answers in a readable text format to the Description field:
+
+```json
+{
+  "Company":     "company",
+  "LastName":    "first_name",
+  "Email":       "email",
+  "Phone":       "phone",
+  "Description": "target_scope_text"
+}
+```
+
+`Description` will contain:
+```
+=== Web Application Penetration Test ===
+How many pages?: 50
+Framework?: React
+
+=== API Security Test ===
+Number of endpoints?: 20
+Authentication type?: OAuth 2.0
+```
+
+#### Scenario 3: Full Answers as JSON
+
+Send all question-answers as structured JSON for programmatic processing:
+
+```json
+{
+  "Company":     "company",
+  "LastName":    "first_name",
+  "Email":       "email",
+  "Phone":       "phone",
+  "Description": "answers_json"
+}
+```
+
+`Description` will contain:
+```json
+[
+  {
+    "category": "Web Application Penetration Test",
+    "questions": [
+      { "question": "How many pages?", "answer": "50" },
+      { "question": "Framework?", "answer": "React" }
+    ]
+  },
+  {
+    "category": "API Security Test",
+    "questions": [
+      { "question": "Number of endpoints?", "answer": "20" }
+    ]
+  }
+]
+```
+
+#### Scenario 4: Individual Question Fields
+
+Map specific question answers to custom Salesforce fields:
+
+```json
+{
+  "Company":       "company",
+  "LastName":      "first_name",
+  "Email":         "email",
+  "Phone":         "phone",
+  "NumberOfPages__c": "q_page_count",
+  "Framework__c":    "q_framework",
+  "Description":   "test_types_text"
+}
+```
+
+> Use the dynamic question field IDs from the "Available Form Fields" reference box in the admin panel.
+
+#### Scenario 5: Combined Mapping
+
+Combine test types and full answers into Description, map individual fields to custom Salesforce fields:
+
+```json
+{
+  "Company":         "company",
+  "LastName":        "first_name",
+  "Email":           "email",
+  "Phone":           "phone",
+  "Website":         "page_url",
+  "Description":     "target_scope_text",
+  "NumberOfPages__c": "q_page_count"
+}
 
 ### Migrating from Password Grant to Client Credentials
 
@@ -847,6 +963,12 @@ The plugin uses WordPress AJAX for form submission:
 ---
 
 ## 📝 Changelog
+
+### v1.5.9 (2026-05-08)
+- ✨ Added: `target_scope_text` field — all question-answers as readable plain text for Salesforce mapping
+- ✨ Added: `answers_json` field — all question-answers as structured JSON for Salesforce mapping
+- ✨ Added: New field mapping scenarios documentation with usage examples
+- 🔧 Improved: Available Form Fields reference now includes all mappable answer fields
 
 ### v1.5.5 (2026-04-20)
 - ✅ Fixed: Content-Type header for Salesforce OAuth requests

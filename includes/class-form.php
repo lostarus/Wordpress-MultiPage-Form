@@ -1607,9 +1607,66 @@ class PTF_Multi_Step_Form {
             return isset($test_types[$id]) ? $test_types[$id] : $id;
         }, $selected_types);
 
+        // Build readable test details text (all question-answers)
+        $target_scope_text = $this->build_test_details_text($form_data);
+
+        // Build structured answers JSON
+        $answers_array = array();
+        $categories = $this->get_categories();
+        foreach ($categories as $category) {
+            if (!in_array($category['id'], $selected_types)) {
+                continue;
+            }
+            $category_data = array(
+                'category' => $category['name'],
+                'questions' => array(),
+            );
+            if (!empty($category['questions'])) {
+                foreach ($category['questions'] as $question) {
+                    $qid = $question['id'];
+                    $answer = isset($form_data[$qid]) ? $form_data[$qid] : null;
+                    if ($answer === null || $answer === '' || (is_array($answer) && empty($answer))) {
+                        continue;
+                    }
+                    // Resolve answer labels
+                    $answer_label = $answer;
+                    if (!empty($question['options'])) {
+                        if (is_array($answer)) {
+                            $answer_label = array();
+                            foreach ($answer as $val) {
+                                foreach ($question['options'] as $opt) {
+                                    if ($opt['id'] === $val) {
+                                        $answer_label[] = $opt['label'];
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            foreach ($question['options'] as $opt) {
+                                if ($opt['id'] === $answer) {
+                                    $answer_label = $opt['label'];
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    $category_data['questions'][] = array(
+                        'question' => $question['question'],
+                        'answer' => is_array($answer_label) ? implode(', ', $answer_label) : $answer_label,
+                    );
+                }
+            }
+            if (!empty($category_data['questions'])) {
+                $answers_array[] = $category_data;
+            }
+        }
+        $answers_json = json_encode($answers_array, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+
         $flat = array_merge($form_data, array(
             'test_types_text'   => implode(', ', $type_labels),
             'test_types_labels' => $type_labels,
+            'target_scope_text' => $target_scope_text,
+            'answers_json'      => $answers_json,
         ));
 
         $record = array();

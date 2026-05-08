@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.9] - 2026-05-08
+
+### Added
+- **Answer Field Mapping**: New `target_scope_text` field for Salesforce mapping — sends all question-answers as readable plain text
+- **Answers JSON Field**: New `answers_json` field for Salesforce mapping — sends all question-answers as structured JSON with category names, questions, and answer labels
+- **Field Mapping Scenarios**: Documentation with 5 common mapping configurations and usage examples
+
+### Improved
+- **Available Form Fields**: Reference box now includes `target_scope_text` and `answers_json` fields
+- **Documentation**: README updated with detailed field mapping scenarios and example outputs
+
 ## [1.5.8] - 2026-04-21
 
 ### Improved
