@@ -1696,6 +1696,12 @@ class PTF_Multi_Step_Form {
      * @return true|WP_Error
      */
     private function send_to_salesforce($form_data) {
+        // Web-to-Lead flow — no OAuth needed
+        $auth_flow = $this->get_setting('salesforce_auth_flow', 'client_credentials');
+        if ($auth_flow === 'web_to_lead') {
+            return $this->send_to_salesforce_web_to_lead($form_data);
+        }
+
         $token_data = $this->get_salesforce_token();
         if (is_wp_error($token_data)) {
             return $token_data;
@@ -1794,6 +1800,152 @@ class PTF_Multi_Step_Form {
     }
 
     /**
+     * Send form submission to Salesforce via Web-to-Lead (no OAuth required).
+     * This is a "fire and forget" approach — Salesforce does not return success/error details.
+     *
+     * @param  array          $form_data
+     * @return true|WP_Error
+     */
+    private function send_to_salesforce_web_to_lead($form_data) {
+        $oid = $this->get_setting('salesforce_web_to_lead_oid', '');
+
+        if (empty($oid)) {
+            return new WP_Error('sf_config', __('Salesforce Organization ID (OID) is not configured for Web-to-Lead.', 'pentest-quote-form'));
+        }
+
+        // Get field mapping from settings
+        $raw_mapping = $this->get_setting('salesforce_w2l_field_mapping', array());
+        if (empty($raw_mapping) || !is_array($raw_mapping)) {
+            $raw_mapping = array(
+                'last_name'    => 'first_name',
+                'email'        => 'email',
+                'phone'        => 'phone',
+                'company'      => 'company',
+                'description'  => 'target_scope_text',
+                'lead_source'  => '__static:Web',
+            );
+        }
+
+        // Build the flat form data array (same pattern as build_salesforce_record)
+        $test_types     = $this->get_test_types();
+        $selected_types = isset($form_data['test_types']) ? $form_data['test_types'] : array();
+        $type_labels    = array_map(function ($id) use ($test_types) {
+            return isset($test_types[$id]) ? $test_types[$id] : $id;
+        }, $selected_types);
+
+        $target_scope_text = $this->build_test_details_text($form_data);
+
+        // Build structured answers JSON
+        $answers_json = '';
+        $categories = $this->get_categories();
+        if (!empty($categories)) {
+            $answers_array = array();
+            foreach ($categories as $category) {
+                $category_data = array('category' => $category['name'], 'questions' => array());
+                if (!empty($category['questions'])) {
+                    foreach ($category['questions'] as $question) {
+                        $qid = $question['id'];
+                        $answer = isset($form_data[$qid]) ? $form_data[$qid] : null;
+                        if ($answer === null || $answer === '' || (is_array($answer) && empty($answer))) {
+                            continue;
+                        }
+                        $answer_label = $answer;
+                        if (!empty($question['options'])) {
+                            if (is_array($answer)) {
+                                $answer_label = array();
+                                foreach ($answer as $val) {
+                                    foreach ($question['options'] as $opt) {
+                                        if ($opt['id'] === $val) { $answer_label[] = $opt['label']; break; }
+                                    }
+                                }
+                            } else {
+                                foreach ($question['options'] as $opt) {
+                                    if ($opt['id'] === $answer) { $answer_label = $opt['label']; break; }
+                                }
+                            }
+                        }
+                        $category_data['questions'][] = array(
+                            'question' => $question['question'],
+                            'answer'   => is_array($answer_label) ? implode(', ', $answer_label) : $answer_label,
+                        );
+                    }
+                }
+                if (!empty($category_data['questions'])) {
+                    $answers_array[] = $category_data;
+                }
+            }
+            $answers_json = json_encode($answers_array, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        }
+
+        $flat = array_merge($form_data, array(
+            'test_types_text'   => implode(', ', $type_labels),
+            'test_types_labels' => $type_labels,
+            'target_scope_text' => $target_scope_text,
+            'answers_json'      => $answers_json,
+        ));
+
+        // Build W2L data from mapping
+        $w2l_data = array(
+            'oid'    => $oid,
+            'retURL' => home_url(),
+        );
+
+        foreach ($raw_mapping as $w2l_field => $form_field) {
+            $w2l_field  = sanitize_text_field($w2l_field);
+            $form_field = sanitize_text_field($form_field);
+
+            // Support __static: prefix for fixed values
+            if (strpos($form_field, '__static:') === 0) {
+                $w2l_data[$w2l_field] = substr($form_field, 9); // Remove '__static:' prefix
+            } elseif (isset($flat[$form_field])) {
+                $value = $flat[$form_field];
+                $w2l_data[$w2l_field] = is_array($value) ? implode(', ', $value) : $value;
+            }
+        }
+
+        // Allow developers to modify the Web-to-Lead data
+        $w2l_data = apply_filters('ptf_salesforce_web_to_lead_data', $w2l_data, $form_data);
+
+        // Remove empty values (except oid and retURL)
+        foreach ($w2l_data as $key => $value) {
+            if (empty($value) && !in_array($key, array('oid', 'retURL'), true)) {
+                unset($w2l_data[$key]);
+            }
+        }
+
+        // POST to Salesforce Web-to-Lead endpoint
+        $endpoint = 'https://webto.salesforce.com/servlet/servlet.WebToLead?encoding=UTF-8';
+
+        $response = wp_remote_post($endpoint, array(
+            'timeout' => 30,
+            'headers' => array(
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            ),
+            'body' => $w2l_data,
+        ));
+
+        if (is_wp_error($response)) {
+            $error_msg = $response->get_error_message();
+            $this->log_salesforce_error('Web-to-Lead HTTP Error: ' . $error_msg, $w2l_data);
+            return new WP_Error('sf_http', $error_msg);
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+
+        // Web-to-Lead returns 200 even on success (it's a redirect-based flow)
+        // We can only check if the HTTP request itself succeeded
+        if ($code >= 200 && $code < 400) {
+            $this->log_salesforce_success('Web-to-Lead submitted successfully (fire-and-forget, no confirmation from Salesforce).', 'W2L-' . time());
+            do_action('ptf_salesforce_web_to_lead_sent', $w2l_data, $form_data);
+            return true;
+        }
+
+        $error_msg = sprintf(__('Web-to-Lead request failed with HTTP %d', 'pentest-quote-form'), $code);
+        $this->log_salesforce_error($error_msg, $w2l_data);
+        return new WP_Error('sf_w2l', $error_msg);
+    }
+
+    /**
      * Log Salesforce errors to database for admin visibility
      */
     private function log_salesforce_error($message, $data = array()) {
@@ -1848,6 +2000,16 @@ class PTF_Multi_Step_Form {
         }
 
         check_ajax_referer('ptf_test_salesforce', 'nonce');
+
+        // Web-to-Lead doesn't support connection testing
+        $auth_flow = $this->get_setting('salesforce_auth_flow', 'client_credentials');
+        if ($auth_flow === 'web_to_lead') {
+            wp_send_json_error(array(
+                'message' => __('Connection testing is not available for Web-to-Lead. Leads are sent in a fire-and-forget manner.', 'pentest-quote-form'),
+                'step' => 'configuration',
+            ));
+            return;
+        }
 
         // Test token acquisition
         $token_data = $this->get_salesforce_token();

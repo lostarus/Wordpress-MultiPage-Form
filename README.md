@@ -3,7 +3,7 @@
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.2%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPLv2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-1.5.8-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
+[![Version](https://img.shields.io/badge/Version-1.6.0-orange.svg)](https://github.com/lostarus/Wordpress-MultiPage-Form/releases)
 [![Tested up to](https://img.shields.io/badge/Tested%20up%20to-WP%206.4-brightgreen.svg)](https://wordpress.org/)
 
 A professional WordPress plugin for cybersecurity penetration test quote requests with multi-step form, Salesforce integration, webhook/API integrations, and full customization options.
@@ -15,14 +15,14 @@ A professional WordPress plugin for cybersecurity penetration test quote request
 - [Installation](#-installation)
 - [Quick Start](#-quick-start)
 - [Shortcode Usage](#-shortcode-usage)
-- [Settings Panel](#%EF%B8%8F-settings-panel)
+- [Settings Panel](#-settings-panel)
 - [Question & Category Management](#-question--category-management)
 - [Customizing Form Labels](#-customizing-form-labels)
 - [Typography Settings](#-typography-settings)
 - [Salesforce Integration](#-salesforce-integration)
 - [Webhook Integrations](#-webhook-integrations)
 - [Managing Submissions](#-managing-submissions)
-- [Security](#%EF%B8%8F-security)
+- [Security](#-security)
 - [Style Customization](#-style-customization)
 - [Troubleshooting](#-troubleshooting)
 - [FAQ](#-faq)
@@ -49,7 +49,7 @@ A professional WordPress plugin for cybersecurity penetration test quote request
 
 | Feature | Description |
 |---------|-------------|
-| ☁️ **Salesforce** | Direct Lead/Contact/Opportunity creation via REST API |
+| ☁️ **Salesforce** | Direct Lead/Contact/Opportunity creation via REST API or Web-to-Lead |
 | 🔗 **Webhooks** | Power Automate, Zapier, Make, custom API support |
 | 📧 **Email** | Automatic notifications and auto-reply emails |
 
@@ -58,6 +58,7 @@ A professional WordPress plugin for cybersecurity penetration test quote request
 | Feature | Description |
 |---------|-------------|
 | 🆕 **External Client App** | Modern Client Credentials OAuth flow (recommended) |
+| 🌐 **Web-to-Lead** | Easiest setup — no Connected App required, just Organization ID |
 | 🔐 **Legacy Support** | Password Grant flow for backward compatibility |
 | 🧪 **Connection Testing** | Test button to verify integration before going live |
 | 📋 **Activity Log** | Real-time log of last 20 Salesforce events |
@@ -329,16 +330,45 @@ Send form submissions directly to Salesforce as a **Lead**, **Contact**, **Accou
 
 ### How It Works
 
-The plugin supports two OAuth 2.0 authentication methods:
+The plugin supports three integration methods:
 
-1. **Client Credentials Flow (Recommended)** - Uses the new Salesforce External Client App structure. No username/password required.
-2. **Password Grant Flow (Legacy)** - Uses the traditional Connected App with username/password. Deprecated but supported for backward compatibility.
+1. **Web-to-Lead (Easiest)** — No Connected App or OAuth required. Just enter your Organization ID (OID). Creates Lead records only.
+2. **Client Credentials Flow (Recommended for API)** — Uses the new Salesforce External Client App structure. No username/password required. Supports Lead, Contact, Account, Opportunity, Case.
+3. **Password Grant Flow (Legacy)** — Uses the traditional Connected App with username/password. Deprecated but supported for backward compatibility.
 
-An access token is cached for 50 minutes and automatically refreshed when it expires.
+An access token is cached for 50 minutes and automatically refreshed when it expires (Client Credentials and Password Grant flows only).
 
 ### Prerequisites
 
-#### Option 1: External Client App (Recommended)
+#### Option 1: Web-to-Lead (Easiest — No App Required)
+
+The simplest way to send leads to Salesforce. No Connected App, no OAuth, no API credentials needed.
+
+**What You Need:**
+- Your Salesforce **Organization ID (OID)** — starts with `00D`
+
+**How to Find Your OID:**
+
+1. **Method A:** Go to **Setup → Company Information → Organization ID**
+2. **Method B:** Go to **Setup → Web-to-Lead → Create Web-to-Lead Form**
+   - Select the fields you want (First Name, Last Name, Email, Company, Description, etc.)
+   - Enter any Return URL (e.g., `https://yoursite.com`)
+   - Click **Generate**
+   - In the generated HTML, find: `<input type="hidden" name="oid" value="00Dxxxxxxxxxx">`
+   - Copy the `value` — that's your OID
+
+**Limitations:**
+| Limitation | Details |
+|-----------|---------|
+| Lead only | Cannot create Contact, Account, Opportunity, or Case |
+| No feedback | "Fire and forget" — no success/error confirmation from Salesforce |
+| Daily limit | 500 leads/day (default Salesforce limit) |
+| No validation | Salesforce validation rules won't return error messages |
+| No connection test | Cannot test the connection — only verify via checking Salesforce for new leads |
+
+> **Tip:** Web-to-Lead is ideal for simple lead capture scenarios. If you need error feedback, custom objects, or advanced field mapping, use Client Credentials flow instead.
+
+#### Option 2: External Client App (Recommended for API)
 
 This is the modern, secure way to integrate with Salesforce. No username/password required.
 
@@ -395,7 +425,7 @@ This is the modern, secure way to integrate with Salesforce. No username/passwor
 | Consumer Key/Secret | Your App → Manage Consumer Details |
 | Run As User | Your App → Manage → Edit Policies → Client Credentials Flow |
 
-#### Option 2: Connected App with Password Grant (Legacy)
+#### Option 3: Connected App with Password Grant (Legacy)
 
 ⚠️ **Deprecated**: Salesforce is phasing out the Password Grant flow. Use External Client App with Client Credentials if possible.
 
@@ -413,7 +443,52 @@ This is the modern, secure way to integrate with Salesforce. No username/passwor
 1. Go to **WordPress Admin → Quote Requests → Settings**
 2. Scroll to **Salesforce Direct Integration**
 3. Check **Enable Salesforce Integration**
-4. Select your **OAuth Flow**:
+4. Select your **Integration Method**:
+
+#### Web-to-Lead Flow (No App Required)
+
+| Field | Description |
+|-------|-------------|
+| **Integration Method** | Select "Web-to-Lead (No App Required - Easiest)" |
+| **Organization ID (OID)** | Your Salesforce Organization ID (starts with `00D`) |
+
+**Web-to-Lead Field Mapping:**
+
+```json
+{
+  "last_name":    "first_name",
+  "email":        "email",
+  "phone":        "phone",
+  "company":      "company",
+  "description":  "target_scope_text",
+  "lead_source":  "__static:Web"
+}
+```
+
+The **left key** is the Salesforce Web-to-Lead field name (lowercase, as shown in the generated HTML). The **right value** is the form field name. Use `__static:VALUE` for fixed values.
+
+**Available Web-to-Lead Field Names:**
+
+| W2L Field | Description |
+|-----------|-------------|
+| `first_name` | First Name |
+| `last_name` | Last Name |
+| `email` | Email |
+| `phone` | Phone |
+| `company` | Company |
+| `title` | Title |
+| `city` | City |
+| `state` / `state_code` | State/Province (text / dropdown) |
+| `country` / `country_code` | Country (text / dropdown) |
+| `zip` | Zip Code |
+| `street` | Street Address |
+| `description` | Description |
+| `lead_source` | Lead Source |
+| `industry` | Industry |
+| `URL` | Website |
+| `00NXX000000XXXXX` | Custom field ID |
+
+> **Note:** Use `state_code` / `country_code` if you selected the dropdown versions in Salesforce Web-to-Lead setup, or `state` / `country` for the text-only versions.
 
 #### Client Credentials Flow (External Client App)
 
@@ -585,6 +660,7 @@ Combine test types and full answers into Description, map individual fields to c
   "Description":     "target_scope_text",
   "NumberOfPages__c": "q_page_count"
 }
+```
 
 ### Migrating from Password Grant to Client Credentials
 
@@ -599,7 +675,9 @@ If you're currently using the Password Grant flow and want to migrate to the rec
 
 ### Testing Your Connection
 
-After configuring your Salesforce credentials:
+> **Note:** Connection testing is only available for Client Credentials and Password Grant flows. Web-to-Lead is "fire and forget" and cannot be tested — verify by checking your Salesforce org for new leads after a form submission.
+
+After configuring your Salesforce credentials (Client Credentials or Password Grant):
 
 1. Click the **Test Connection** button in the Salesforce settings section
 2. The plugin will attempt to:
@@ -638,18 +716,29 @@ This helps you:
 ### Developer Hooks
 
 ```php
-// Modify the Salesforce record before it is sent
+// Modify the Salesforce record before it is sent (REST API flows)
 add_filter('ptf_salesforce_record', function($record, $form_data, $object) {
     $record['LeadSource'] = 'Website';
     $record['Rating']     = 'Hot';
     return $record;
 }, 10, 3);
 
-// Fires after a Salesforce record is successfully created
+// Fires after a Salesforce record is successfully created (REST API flows)
 add_action('ptf_salesforce_record_created', function($sf_id, $form_data, $object) {
     // $sf_id is the new Salesforce record ID
     error_log('Salesforce record created: ' . $sf_id);
 }, 10, 3);
+
+// Modify Web-to-Lead data before it is sent
+add_filter('ptf_salesforce_web_to_lead_data', function($w2l_data, $form_data) {
+    $w2l_data['campaign_id'] = '701xx000000XXXX'; // Assign to a campaign
+    return $w2l_data;
+}, 10, 2);
+
+// Fires after Web-to-Lead submission is sent
+add_action('ptf_salesforce_web_to_lead_sent', function($w2l_data, $form_data) {
+    error_log('Web-to-Lead submitted for: ' . $w2l_data['email']);
+}, 10, 2);
 ```
 
 ### Troubleshooting
@@ -717,7 +806,7 @@ Send form data to external systems automatically.
 {
   "meta": {
     "source": "pentest-quote-form",
-    "version": "1.5.5",
+    "version": "1.6.0",
     "site_name": "Your Site",
     "submitted_at": "2026-04-20 14:30:00"
   },
@@ -906,8 +995,14 @@ $payload = apply_filters('ptf_webhook_payload', $payload, $form_data);
 // Modify Salesforce record before sending
 $record = apply_filters('ptf_salesforce_record', $record, $form_data, $sf_object);
 
-// Fires after successful Salesforce record creation
+// Fires after successful Salesforce record creation (REST API)
 do_action('ptf_salesforce_record_created', $sf_id, $form_data, $sf_object);
+
+// Modify Web-to-Lead data before sending
+$w2l_data = apply_filters('ptf_salesforce_web_to_lead_data', $w2l_data, $form_data);
+
+// Fires after Web-to-Lead submission is sent
+do_action('ptf_salesforce_web_to_lead_sent', $w2l_data, $form_data);
 
 // Modify blocked email domains list
 $domains = apply_filters('ptf_blocked_email_domains', $domains);
@@ -964,11 +1059,33 @@ The plugin uses WordPress AJAX for form submission:
 
 ## 📝 Changelog
 
+### v1.6.0 (2026-05-11)
+- ✨ Added: **Salesforce Web-to-Lead** integration — no Connected App or OAuth required, just Organization ID
+- ✨ Added: Configurable Web-to-Lead field mapping with JSON editor and `__static:` prefix for fixed values
+- ✨ Added: Web-to-Lead reference boxes showing all available Salesforce W2L and form field names
+- ✨ Added: Developer hooks `ptf_salesforce_web_to_lead_data` (filter) and `ptf_salesforce_web_to_lead_sent` (action)
+- ✅ Fixed: Settings preservation on plugin update — settings no longer lost when plugin is updated
+- ✅ Fixed: Double-sanitization bug that caused field mapping and checkbox values to revert on first save
+- ✅ Fixed: Webhooks no longer wiped when invalid JSON is submitted
+- 🔧 Improved: Settings sanitization starts from saved values instead of empty array
+
 ### v1.5.9 (2026-05-08)
 - ✨ Added: `target_scope_text` field — all question-answers as readable plain text for Salesforce mapping
 - ✨ Added: `answers_json` field — all question-answers as structured JSON for Salesforce mapping
 - ✨ Added: New field mapping scenarios documentation with usage examples
 - 🔧 Improved: Available Form Fields reference now includes all mappable answer fields
+
+### v1.5.8 (2026-04-21)
+- 🔧 Improved: reCAPTCHA is now truly optional — form works without any reCAPTCHA configuration
+
+### v1.5.7 (2026-04-21)
+- ✨ Added: Interactive form fields reference box with click-to-copy
+- ✨ Added: Dynamic question fields auto-listed in reference
+- 🔧 Improved: Salesforce mapping UX with field descriptions
+
+### v1.5.6 (2026-04-21)
+- ✅ Fixed: Salesforce field mapping JSON persistence after page reload
+- ✅ Fixed: JSON parsing with `wp_unslash()` for WordPress compatibility
 
 ### v1.5.5 (2026-04-20)
 - ✅ Fixed: Content-Type header for Salesforce OAuth requests

@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-05-11
+
+### Added
+- **Salesforce Web-to-Lead Integration**: New "Web-to-Lead" authentication flow — the easiest way to send leads to Salesforce. No Connected App, no OAuth, no API credentials required. Just enter your Organization ID (OID) and configure field mapping.
+- **W2L Configurable Field Mapping**: JSON-based field mapping editor for Web-to-Lead, supporting all standard Salesforce W2L fields (`first_name`, `last_name`, `email`, `company`, `city`, `country_code`, `state_code`, `description`, etc.) and custom field IDs.
+- **Static Value Support**: `__static:VALUE` syntax for sending fixed values in field mapping (e.g., `"lead_source": "__static:Web"`)
+- **W2L Field Reference Boxes**: Interactive reference showing all available Salesforce Web-to-Lead field names and form fields with click-to-copy functionality
+- **W2L Developer Hooks**: `ptf_salesforce_web_to_lead_data` filter to modify W2L data before sending, `ptf_salesforce_web_to_lead_sent` action fired after successful submission
+- **Dynamic W2L Field Mapping**: Web-to-Lead send method now reads field mapping from settings instead of using hardcoded fields, supporting `target_scope_text`, `answers_json`, and all dynamic question fields
+
+### Fixed
+- **Settings Preservation on Update**: Fixed critical bug where plugin settings were lost when plugin was updated. `sanitize_settings` now starts from current saved values (`wp_parse_args($current, defaults)`) instead of an empty array
+- **Double-Sanitization Bug**: Fixed WordPress Settings API double-sanitization issue where `sanitize_callback` was called twice on first save (once from `options.php`, again from `add_option`). This caused field mapping JSON, webhook configurations, and checkbox values to revert to defaults on first save after installation
+- **Checkbox Revert**: Fixed all checkbox settings (`send_auto_reply`, `save_to_database`, `send_email_notification`, `enable_webhooks`, `enable_salesforce`) that could flip from disabled to enabled during re-sanitization
+- **Webhook Data Loss**: Webhooks configuration no longer wiped when invalid JSON is submitted — existing config is preserved
+- **Auth Flow Validation**: Added whitelist validation for `salesforce_auth_flow` setting to prevent invalid values
+
+### Improved
+- **Test Connection**: Test Connection button is now disabled when Web-to-Lead is selected (W2L is fire-and-forget with no confirmation from Salesforce)
+- **Admin UI**: Auth flow selection dynamically shows/hides relevant configuration sections (W2L fields, OAuth credentials, API settings)
+- **Country/State Fields**: W2L field reference now distinguishes between text (`country`/`state`) and dropdown (`country_code`/`state_code`) variants matching actual Salesforce-generated HTML
+
 ## [1.5.9] - 2026-05-08
 
 ### Added

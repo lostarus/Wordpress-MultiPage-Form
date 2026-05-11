@@ -103,13 +103,19 @@
                 }
             });
 
-            // Salesforce auth flow toggle (show/hide password grant fields)
+            // Salesforce auth flow toggle (show/hide relevant sections)
             $('#salesforce_auth_flow').on('change', function() {
-                if ($(this).val() === 'password') {
-                    $('#salesforce-password-grant-fields').show();
-                } else {
-                    $('#salesforce-password-grant-fields').hide();
-                }
+                const flow = $(this).val();
+                // Web-to-Lead fields
+                $('#salesforce-web-to-lead-fields').toggle(flow === 'web_to_lead');
+                // OAuth fields (Client ID, Secret, Login URL)
+                $('#salesforce-oauth-fields').toggle(flow !== 'web_to_lead');
+                // API settings (Object type, API version, Field mapping)
+                $('#salesforce-api-settings').toggle(flow !== 'web_to_lead');
+                // Password grant fields (only for password flow)
+                $('#salesforce-password-grant-fields').toggle(flow === 'password');
+                // Test connection button (not available for Web-to-Lead)
+                $('#test-salesforce-btn').closest('div').toggle(flow !== 'web_to_lead');
             });
 
             // Salesforce Login URL type toggle (production/sandbox/custom)

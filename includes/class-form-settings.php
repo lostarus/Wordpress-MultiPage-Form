@@ -101,7 +101,16 @@ class PTF_Form_Settings {
             'webhooks' => array(),
             // Salesforce direct integration (External Client App)
             'enable_salesforce' => '0',
-            'salesforce_auth_flow' => 'client_credentials', // client_credentials (recommended) or password
+            'salesforce_auth_flow' => 'client_credentials', // client_credentials (recommended), password (legacy), or web_to_lead (no app required)
+            'salesforce_web_to_lead_oid' => '', // Organization ID for Web-to-Lead
+            'salesforce_w2l_field_mapping' => array( // Web-to-Lead uses HTML form field names (lowercase)
+                'last_name'    => 'first_name',
+                'email'        => 'email',
+                'phone'        => 'phone',
+                'company'      => 'company',
+                'description'  => 'target_scope_text',
+                'lead_source'  => '__static:Web',
+            ),
             'salesforce_login_url' => 'https://login.salesforce.com',
             'salesforce_client_id' => '',
             'salesforce_client_secret' => '',
@@ -336,7 +345,28 @@ class PTF_Form_Settings {
      * Sanitize settings
      */
     public function sanitize_settings($input) {
-        $sanitized = array();
+        // Guard: WordPress may call sanitize_callback twice — once from options.php
+        // and again from update_option/add_option internal sanitize filter.
+        // On the second call, $input is already sanitized (has array keys like
+        // 'salesforce_field_mapping' but NOT the '_json' textarea keys).
+        // Detect this and return $input as-is to prevent data loss.
+        $has_json_keys = isset($input['salesforce_field_mapping_json'])
+            || isset($input['salesforce_w2l_field_mapping_json'])
+            || isset($input['webhooks_json']);
+        $has_parsed_keys = isset($input['salesforce_field_mapping'])
+            || isset($input['webhooks']);
+
+        if (!$has_json_keys && $has_parsed_keys) {
+            return $input;
+        }
+
+        // Start from current saved settings so missing fields are preserved
+        // This prevents settings loss when:
+        // - Fields are hidden (e.g., OAuth fields when Web-to-Lead is selected)
+        // - Plugin updates add new settings that aren't in the form yet
+        // - Partial form submissions occur
+        $current = get_option('ptf_settings', array());
+        $sanitized = wp_parse_args($current, self::get_defaults());
 
         $sanitized['notification_email'] = isset($input['notification_email'])
             ? sanitize_text_field($input['notification_email']) : '';
@@ -404,6 +434,37 @@ class PTF_Form_Settings {
         // Salesforce direct integration
         $sanitized['enable_salesforce'] = isset($input['enable_salesforce']) ? '1' : '0';
 
+        // Salesforce auth flow — whitelist validation
+        $allowed_auth_flows = array('client_credentials', 'password', 'web_to_lead');
+        $sf_auth_flow_input = isset($input['salesforce_auth_flow']) ? sanitize_text_field($input['salesforce_auth_flow']) : 'client_credentials';
+        $sanitized['salesforce_auth_flow'] = in_array($sf_auth_flow_input, $allowed_auth_flows, true) ? $sf_auth_flow_input : 'client_credentials';
+
+        // Web-to-Lead OID
+        $sanitized['salesforce_web_to_lead_oid'] = isset($input['salesforce_web_to_lead_oid']) ? sanitize_text_field(trim($input['salesforce_web_to_lead_oid'])) : '';
+
+        // Web-to-Lead field mapping (JSON textarea → associative array)
+        if (isset($input['salesforce_w2l_field_mapping_json']) && !empty(trim($input['salesforce_w2l_field_mapping_json']))) {
+            $json_input = wp_unslash($input['salesforce_w2l_field_mapping_json']);
+            $w2l_mapping = json_decode($json_input, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($w2l_mapping) && !empty($w2l_mapping)) {
+                $sanitized_w2l_mapping = array();
+                foreach ($w2l_mapping as $w2l_field => $form_field) {
+                    $key = sanitize_text_field($w2l_field);
+                    $value = sanitize_text_field($form_field);
+                    if (!empty($key) && !empty($value)) {
+                        $sanitized_w2l_mapping[$key] = $value;
+                    }
+                }
+                if (!empty($sanitized_w2l_mapping)) {
+                    $sanitized['salesforce_w2l_field_mapping'] = $sanitized_w2l_mapping;
+                }
+                // else: keep existing - $sanitized already has existing values
+            }
+            // else: invalid JSON - keep existing mapping
+        }
+        // else: empty input - keep existing mapping
+
         // Salesforce Login URL - allow custom My Domain URLs
         $sf_login_url = isset($input['salesforce_login_url']) ? esc_url_raw(trim($input['salesforce_login_url'])) : 'https://login.salesforce.com';
         // Validate that it's a valid Salesforce URL (must be https and contain salesforce)
@@ -446,19 +507,15 @@ class PTF_Form_Settings {
                 if (!empty($sanitized_mapping)) {
                     $sanitized['salesforce_field_mapping'] = $sanitized_mapping;
                 } else {
-                    // Keep existing if sanitization resulted in empty
-                    $current = get_option('ptf_settings', array());
-                    $sanitized['salesforce_field_mapping'] = isset($current['salesforce_field_mapping']) ? $current['salesforce_field_mapping'] : array();
+                    // Keep existing - $sanitized already has existing values
                 }
             } else {
                 // Invalid JSON - keep existing mapping
-                $current = get_option('ptf_settings', array());
-                $sanitized['salesforce_field_mapping'] = isset($current['salesforce_field_mapping']) ? $current['salesforce_field_mapping'] : array();
+                // $sanitized already has existing values from wp_parse_args
             }
         } else {
             // Empty input - keep existing mapping
-            $current = get_option('ptf_settings', array());
-            $sanitized['salesforce_field_mapping'] = isset($current['salesforce_field_mapping']) ? $current['salesforce_field_mapping'] : array();
+            // $sanitized already has existing values from wp_parse_args
         }
 
         // Process webhooks JSON
@@ -483,12 +540,12 @@ class PTF_Form_Settings {
                 }
                 $sanitized['webhooks'] = $sanitized_webhooks;
             } else {
-                $sanitized['webhooks'] = array();
+                // Invalid JSON - keep existing webhooks (don't wipe them)
+                // $sanitized already has existing values from wp_parse_args
             }
         } else {
             // Keep existing webhooks
-            $current = get_option('ptf_settings', array());
-            $sanitized['webhooks'] = isset($current['webhooks']) ? $current['webhooks'] : array();
+            // $sanitized already has existing values from wp_parse_args
         }
 
         // Process test types
@@ -1564,10 +1621,13 @@ class PTF_Form_Settings {
                             <table class="form-table">
                                 <tr>
                                     <th scope="row">
-                                        <label for="salesforce_auth_flow"><?php esc_html_e('OAuth Flow', 'pentest-quote-form'); ?></label>
+                                        <label for="salesforce_auth_flow"><?php esc_html_e('Integration Method', 'pentest-quote-form'); ?></label>
                                     </th>
                                     <td>
                                         <select id="salesforce_auth_flow" name="ptf_settings[salesforce_auth_flow]">
+                                            <option value="web_to_lead" <?php selected($settings['salesforce_auth_flow'] ?? 'client_credentials', 'web_to_lead'); ?>>
+                                                <?php esc_html_e('Web-to-Lead (No App Required - Easiest)', 'pentest-quote-form'); ?>
+                                            </option>
                                             <option value="client_credentials" <?php selected($settings['salesforce_auth_flow'] ?? 'client_credentials', 'client_credentials'); ?>>
                                                 <?php esc_html_e('Client Credentials (External Client App - Recommended)', 'pentest-quote-form'); ?>
                                             </option>
@@ -1576,12 +1636,149 @@ class PTF_Form_Settings {
                                             </option>
                                         </select>
                                         <p class="description">
-                                            <?php esc_html_e('Client Credentials flow is the recommended method for server-to-server integrations. Password Grant is deprecated but supported for backward compatibility.', 'pentest-quote-form'); ?>
+                                            <?php esc_html_e('Web-to-Lead requires only an Organization ID (no app setup). Client Credentials is recommended for full API access. Password Grant is deprecated.', 'pentest-quote-form'); ?>
                                         </p>
                                     </td>
                                 </tr>
                             </table>
 
+                            <!-- Web-to-Lead Configuration (shown only when web_to_lead flow is selected) -->
+                            <div id="salesforce-web-to-lead-fields" style="<?php echo ($settings['salesforce_auth_flow'] ?? 'client_credentials') !== 'web_to_lead' ? 'display:none;' : ''; ?>">
+                                <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #28a745; padding-bottom: 5px; color: #28a745;">
+                                    <span class="dashicons dashicons-welcome-add-page" style="vertical-align: middle;"></span>
+                                    <?php esc_html_e('Web-to-Lead Settings', 'pentest-quote-form'); ?>
+                                </h4>
+                                <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+                                    <span style="color: #155724;">✅ <?php esc_html_e('Web-to-Lead does not require an External Client App or Connected App. You only need your Organization ID (OID).', 'pentest-quote-form'); ?></span>
+                                </div>
+                                <div style="background: #fff3cd; border: 1px solid #ffeeba; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+                                    <strong style="color: #856404;">⚠️ <?php esc_html_e('Limitations:', 'pentest-quote-form'); ?></strong>
+                                    <ul style="margin: 5px 0 0 20px; color: #856404; font-size: 13px;">
+                                        <li><?php esc_html_e('Only creates Lead records (no Contact, Opportunity, etc.)', 'pentest-quote-form'); ?></li>
+                                        <li><?php esc_html_e('No success/error feedback — "fire and forget"', 'pentest-quote-form'); ?></li>
+                                        <li><?php esc_html_e('Daily limit: 500 leads (default Salesforce limit)', 'pentest-quote-form'); ?></li>
+                                        <li><?php esc_html_e('Salesforce Validation Rules will not return error messages', 'pentest-quote-form'); ?></li>
+                                    </ul>
+                                </div>
+                                <table class="form-table">
+                                    <tr>
+                                        <th scope="row">
+                                            <label for="salesforce_web_to_lead_oid"><?php esc_html_e('Organization ID (OID)', 'pentest-quote-form'); ?></label>
+                                        </th>
+                                        <td>
+                                            <input type="text"
+                                                   id="salesforce_web_to_lead_oid"
+                                                   name="ptf_settings[salesforce_web_to_lead_oid]"
+                                                   value="<?php echo esc_attr($settings['salesforce_web_to_lead_oid'] ?? ''); ?>"
+                                                   class="regular-text"
+                                                   autocomplete="off"
+                                                   placeholder="00D...">
+                                            <p class="description">
+                                                <?php esc_html_e('Your Salesforce Organization ID (starts with 00D).', 'pentest-quote-form'); ?>
+                                            </p>
+                                            <div style="background: #e7f3ff; border: 1px solid #b8daff; padding: 10px; border-radius: 4px; margin-top: 10px;">
+                                                <strong style="color: #004085;">💡 <?php esc_html_e('Finding Your OID:', 'pentest-quote-form'); ?></strong><br>
+                                                <small style="color: #004085;">
+                                                    <?php esc_html_e('Setup → Company Information → Organization ID', 'pentest-quote-form'); ?><br>
+                                                    <?php esc_html_e('Or: Setup → Web-to-Lead → Create Web-to-Lead Form → Copy the "oid" value from the generated HTML', 'pentest-quote-form'); ?>
+                                                </small>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- Web-to-Lead Field Mapping -->
+                                <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #17a2b8; padding-bottom: 5px; color: #17a2b8;">
+                                    <span class="dashicons dashicons-randomize" style="vertical-align: middle;"></span>
+                                    <?php esc_html_e('Web-to-Lead Field Mapping', 'pentest-quote-form'); ?>
+                                </h4>
+
+                                <div style="background: #e7f3ff; border: 1px solid #b8daff; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+                                    <strong style="color: #004085;">📋 <?php esc_html_e('Salesforce Web-to-Lead Field Names:', 'pentest-quote-form'); ?></strong>
+                                    <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px;">
+                                        <?php
+                                        $w2l_fields = array(
+                                            'first_name'   => 'First Name',
+                                            'last_name'    => 'Last Name',
+                                            'email'        => 'Email',
+                                            'phone'        => 'Phone',
+                                            'company'      => 'Company',
+                                            'title'        => 'Title',
+                                            'city'         => 'City',
+                                            'state'        => 'State/Province (text)',
+                                            'state_code'   => 'State/Province (dropdown)',
+                                            'country'      => 'Country (text)',
+                                            'country_code' => 'Country (dropdown)',
+                                            'zip'          => 'Zip',
+                                            'street'       => 'Street',
+                                            'description'  => 'Description',
+                                            'lead_source'  => 'Lead Source',
+                                            'industry'     => 'Industry',
+                                            'rating'       => 'Rating',
+                                            'revenue'      => 'Annual Revenue',
+                                            'employees'    => 'Employees',
+                                            'URL'          => 'Website',
+                                        );
+                                        foreach ($w2l_fields as $field_name => $field_label) {
+                                            echo '<code style="background: #fff; padding: 2px 6px; border-radius: 3px; font-size: 12px; cursor: pointer;" title="' . esc_attr($field_label) . '" onclick="navigator.clipboard.writeText(\'' . esc_js($field_name) . '\')">' . esc_html($field_name) . '</code>';
+                                        }
+                                        ?>
+                                    </div>
+                                    <small style="color: #004085; display: block; margin-top: 6px;">
+                                        <?php esc_html_e('Click to copy. Custom fields use their Field ID (e.g., 00NXX000000XXXXX).', 'pentest-quote-form'); ?>
+                                    </small>
+                                </div>
+
+                                <div style="background: #f0f0f1; border: 1px solid #c3c4c7; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+                                    <strong>📝 <?php esc_html_e('Available Form Fields:', 'pentest-quote-form'); ?></strong>
+                                    <div style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px;">
+                                        <?php
+                                        $form_fields = array(
+                                            'first_name'        => 'İsim / Name',
+                                            'email'             => 'Email',
+                                            'phone'             => 'Phone',
+                                            'company'           => 'Company',
+                                            'test_types_text'   => 'Selected Test Types (text)',
+                                            'target_scope_text' => 'All Answers (text)',
+                                            'answers_json'      => 'All Answers (JSON)',
+                                            'page_url'          => 'Form Page URL',
+                                        );
+                                        foreach ($form_fields as $field_name => $field_label) {
+                                            echo '<code style="background: #fff; padding: 2px 6px; border-radius: 3px; font-size: 12px; cursor: pointer;" title="' . esc_attr($field_label) . '" onclick="navigator.clipboard.writeText(\'' . esc_js($field_name) . '\')">' . esc_html($field_name) . '</code>';
+                                        }
+                                        ?>
+                                    </div>
+                                    <small style="color: #50575e; display: block; margin-top: 6px;">
+                                        <?php esc_html_e('Use __static:VALUE for fixed values (e.g., "lead_source": "__static:Web").', 'pentest-quote-form'); ?>
+                                    </small>
+                                </div>
+
+                                <?php
+                                $default_w2l_mapping = array(
+                                    'last_name'    => 'first_name',
+                                    'email'        => 'email',
+                                    'phone'        => 'phone',
+                                    'company'      => 'company',
+                                    'description'  => 'target_scope_text',
+                                    'lead_source'  => '__static:Web',
+                                );
+                                $w2l_mapping = isset($settings['salesforce_w2l_field_mapping']) && is_array($settings['salesforce_w2l_field_mapping']) && !empty($settings['salesforce_w2l_field_mapping'])
+                                    ? $settings['salesforce_w2l_field_mapping']
+                                    : $default_w2l_mapping;
+                                ?>
+                                <textarea id="salesforce_w2l_field_mapping_json"
+                                          name="ptf_settings[salesforce_w2l_field_mapping_json]"
+                                          rows="10"
+                                          class="large-text code"
+                                          style="font-family: monospace; font-size: 12px;"><?php echo esc_textarea(json_encode($w2l_mapping, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></textarea>
+                                <p class="description">
+                                    <?php esc_html_e('Format: { "w2l_field_name": "form_field" }. The W2L field names must match the fields you selected in Salesforce Setup → Web-to-Lead.', 'pentest-quote-form'); ?>
+                                </p>
+
+                            </div>
+
+                            <!-- OAuth Credentials (hidden for Web-to-Lead) -->
+                            <div id="salesforce-oauth-fields" style="<?php echo ($settings['salesforce_auth_flow'] ?? 'client_credentials') === 'web_to_lead' ? 'display:none;' : ''; ?>">
                             <table class="form-table">
                                 <tr>
                                     <th scope="row">
@@ -1697,7 +1894,10 @@ class PTF_Form_Settings {
                                     </tr>
                                 </table>
                             </div>
+                            </div> <!-- /salesforce-oauth-fields -->
 
+                            <!-- Object and API Settings (hidden for Web-to-Lead) -->
+                            <div id="salesforce-api-settings" style="<?php echo ($settings['salesforce_auth_flow'] ?? 'client_credentials') === 'web_to_lead' ? 'display:none;' : ''; ?>">
                             <!-- Object and API Settings -->
                             <h4 style="margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #00A1E0; padding-bottom: 5px; color: #00A1E0;">
                                 <span class="dashicons dashicons-database" style="vertical-align: middle;"></span>
@@ -1903,10 +2103,14 @@ class PTF_Form_Settings {
                                 <?php esc_html_e('Format: { "SalesforceField": "form_field" }. Click "Show/Hide" above to see all available form fields.', 'pentest-quote-form'); ?>
                             </p>
 
+                            </div> <!-- /salesforce-api-settings -->
+
                             <!-- Status indicator -->
                             <?php
                             $sf_auth_flow = $settings['salesforce_auth_flow'] ?? 'client_credentials';
-                            if ($sf_auth_flow === 'client_credentials') {
+                            if ($sf_auth_flow === 'web_to_lead') {
+                                $sf_configured = !empty($settings['salesforce_web_to_lead_oid']);
+                            } elseif ($sf_auth_flow === 'client_credentials') {
                                 $sf_configured = !empty($settings['salesforce_client_id'])
                                     && !empty($settings['salesforce_client_secret']);
                             } else {
@@ -1922,7 +2126,9 @@ class PTF_Form_Settings {
                                             : 'background: #fff3cd; border: 1px solid #ffeeba;'; ?>">
                                 <?php if ($sf_configured): ?>
                                     <span style="color: #155724;">✅ <?php
-                                        if ($sf_auth_flow === 'client_credentials') {
+                                        if ($sf_auth_flow === 'web_to_lead') {
+                                            esc_html_e('Web-to-Lead configured. Leads will be sent directly to Salesforce on form submission (no connection test available for Web-to-Lead).', 'pentest-quote-form');
+                                        } elseif ($sf_auth_flow === 'client_credentials') {
                                             esc_html_e('Salesforce External Client App credentials configured. Connection will be tested on the next form submission.', 'pentest-quote-form');
                                         } else {
                                             esc_html_e('Salesforce credentials configured (Legacy Password Grant). Connection will be tested on the next form submission.', 'pentest-quote-form');
@@ -1930,7 +2136,9 @@ class PTF_Form_Settings {
                                     ?></span>
                                 <?php else: ?>
                                     <span style="color: #856404;">⚠️ <?php
-                                        if ($sf_auth_flow === 'client_credentials') {
+                                        if ($sf_auth_flow === 'web_to_lead') {
+                                            esc_html_e('Organization ID (OID) is required for Web-to-Lead integration.', 'pentest-quote-form');
+                                        } elseif ($sf_auth_flow === 'client_credentials') {
                                             esc_html_e('Salesforce credentials incomplete. Client ID and Client Secret are required for External Client App.', 'pentest-quote-form');
                                         } else {
                                             esc_html_e('Salesforce credentials incomplete. Please fill in all required fields for Password Grant flow.', 'pentest-quote-form');
